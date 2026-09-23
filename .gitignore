@@ -1,0 +1,9 @@
+.vscode/
+.venv
+.env
+.python-version
+pyproject.toml
+uv.lock
+__pycache__/
+outputs/
+*.ipynb

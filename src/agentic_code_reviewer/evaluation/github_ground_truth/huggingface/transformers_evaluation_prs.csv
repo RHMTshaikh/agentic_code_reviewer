@@ -1,0 +1,395 @@
+number,changed_files,authoritative_threads,title
+45465,3,20,[docs] contributing
+45152,3,20,[docs] model testing
+46717,4,20,Shard on read Dtensor aware
+46219,4,20,revamp cv docs and fix rf-detr
+44174,4,20,"Expand model-structure lint rules with a fast AST-based, ruff-like framework"
+45448,5,20,[loading] Clean way to add/remove full parts in checkpoint names
+43917,5,20,Model patching API
+44832,6,20,DeepGEMM
+45041,7,20,[inference_fusion] convert conv3d patch embed to linear
+46654,8,20,DiffusionGemma: mask layout and CI
+47625,10,20,[Improvement] Make gated delta rule more explicit 
+46084,3,19,Fix use_cache with seq_len > 1 ( #46032)
+46265,7,18,Fix fp8 moe reverse substring
+45425,7,18,chore(typing): added modeling_utils to ty
+47975,5,17,[generate] stop synchronizing the accelerator on every decode step
+45329,2,16,"Update `trackio` integration to use Buckets and ""freeze"" Space after training"
+44947,4,16,Add doc page for capturing outputs
+44290,6,16,"[docs] optimizers, hyperparam search, training features"
+47334,8,16,Kernels and loaders robustification
+45979,5,15,[Generation] Add static ensemble verification for lossy speculative decoding
+44758,7,15,Propagate the model loading from transformers serve to chat
+44185,7,15,[docs] trainer part 1
+46401,9,15,[blip_2] Support attn_implementation dispatch
+45795,3,13,[docs] adding audio/video processors
+47614,4,13,feat[vLLM]: Support text replacement offsets in the remaining old-format processors
+47340,7,13,Batch Rebalance Data Sampler
+45333,7,13,Add heterogeneous config support (per-layer configuration)
+47289,9,13,Pipeline parallel naive inference
+46073,2,12,[CTRL] Support attn_implementation dispatch
+44397,3,12,Fix GPT2 attention scaling ignored in SDPA/FlashAttention
+46754,4,12,Documentation for the kernel API
+46572,4,12,[DiffusionGemma] Support gradient checkpointing
+46339,4,12,Extended & simplified n-to-1 kernel fusion via KernelConfig
+44558,5,12,Add /v1/completions endpoint (OpenAI legacy completions API) to `transformers serve`
+46446,6,12,Fix several bugs in `cache_implementation=static`
+44799,10,12,[docs] training on specific hardware
+44041,4,11,refactor _inner_training_loop to smaller methods
+44225,5,11,Fix generation integration tests
+47111,7,11,"[Qwen3ASR] Add hotword parsing, and fix language parsing and training."
+45184,7,11,[CB] [Major] Add CPU request offloading
+45664,2,10,Doc translate to Persian(farsi) 
+44395,6,10,Fix kernels security issue
+46911,7,10,[Olmo3] different RoPE per layer type
+46046,7,10,Add the other processors to auto-mappings
+48221,2,9,Support nested FLA kernel imports for fla-core
+46960,2,9,Fix silent SDPA math-kernel fallback for GQA when key/value head_dim > 256 or differ
+44331,3,9,[timesfm2_5] fix timesfm2.5 loss
+46764,4,9,Add native masked MSE loss for Sapiens2ForPoseEstimation
+43807,5,9,Refactor trainer init
+46707,7,9,Add native FSDP2 module + migration
+44239,7,9,[docs] callbacks and collators
+46092,9,9,Clean up new models after release
+44342,9,9,[docs] training performance
+46320,3,8,[RecurrentGemma] Support attn_implementation dispatch
+46069,3,8,[ShieldGemma2] Support attn_implementation dispatch
+48528,4,8,Fix D-FINE / RT-DETR main loss being computed over the denoising queries
+47154,4,8,Better deepgemm errors
+45640,4,8,"🚨🚨🚨 [Trainer] Default to FSDP2, simplify API around fsdp + fsdp_config"
+44146,4,8,Ensure final evaluation runs with step-based evaluation strategy
+45433,7,8,SonicMoe
+46889,1,7,"Kernel api doc, part 2"
+46333,2,7,[docs] padding-free training
+45420,2,7,:rotating_light: [`Kernels`] Fix kernel function registration
+47948,3,7,[emu3] 🦮 Black Labrador is back! Fix image generation broken since #37033
+45817,3,7,Fix model parallel bugs for Gemma4
+44304,3,7,docs: Add NeMo Automodel community integration docs
+48455,4,7,[GLM 5.3 Flash] Fix NaN gradients in chunked KDA
+47323,4,7,Fix deepgemm on multiple devices
+45690,5,7,[serve] Support for reasoning 
+47720,7,7,🚨 [cache] Cropping can only be done with negative values
+45220,7,7,Multimodal serve support 
+46603,8,7,[Mistral] Move MistralConverter into integrations/mistral/ package
+45190,10,7,Fix ty for transformers cli
+48702,1,6,"add kernel mapping entry for RMSNormGated, KDA, Conv1D on XPU"
+48185,1,6,Warn once when a hub-kernel function falls back to its reference PyTorch path
+45900,1,6,[docs] ALMModelTest
+47382,2,6,ci: harden daily CI reporting against GitHub API rate limits
+46361,2,6,[docs] deepgemm
+45349,2,6,Fix #45305 + add regression test GAS
+45808,3,6,"🚨 [Fuyu] Remove FuyuBatchFeature subclass, use BatchFeature with skip_tensor_conversion"
+45485,4,6,[serve] Update tool call to switch to `parse_response`
+45285,4,6,Fix export for gemma4 and add Integration tests
+45207,4,6,[Gemma4] Add docstrings for Per-Layer Embeddings (PLE) pipeline
+47913,5,6,Add TP-plan for muse_glimmer and fix dflash for sharded embedding
+45892,5,6,Fix deepseek v4
+45621,5,6,Better Grouped GEMM + EP
+44231,5,6,[Performance] FP8 Grouped and Batched Matmuls
+44040,5,6,Fix gemma3n `get_audio_features`
+43912,5,6,[fix][wip] GlmMoeDsa: try implement DSA
+48118,7,6,Fix `gpt_oss` runs on GPU
+47726,7,6,Import utils compilation fixes
+48516,9,6,"Enable FSDP2 + expert parallelism via a 2-D (fsdp, tp) device mesh"
+44434,9,6,[CB] Add dedicated config
+47933,1,5,Fix dtype mismatch in grouped_mm_fallback for LoRA training on Mamba+…
+44927,1,5,fix: improve processor loading performance by avoiding redundant tokenizer parsing
+48689,2,5,Keep the expert-parallel sentinel slots out of the router gradient
+48465,2,5,[docs] Kernel updates
+46727,2,5,Improve AutoImageProcessor error for unavailable backends
+46366,2,5,extend deepseek v4 test to xpu
+45271,2,5,[docs] vlm addition
+45009,2,5,refactor: speed up docstring checker
+44890,2,5,Add big angry code agent warnings!
+48053,3,5,[Video] Fix convert_to_rgb channel slicing and alpha blending for RGBA videos
+47877,3,5,"Fix DFlash candidate token device mismatch with device_map=""auto"""
+47517,3,5,General maintenance 
+46539,3,5,Fix `PhimoeIntegrationTest`
+46344,3,5,Fix flip_back graph break
+45424,3,5,Add IndexCache support for GLM5 DSA
+45063,3,5,CB improvements for serving 
+45044,3,5,fix bug for janus model image generation
+47126,4,5,[Fix] Make DeepGEMM triton fallback more robust
+44636,4,5,feat(ci): added a network debug report
+43900,4,5,[docs] refactor tokenizer docs
+43877,4,5,Fix missing fast image patch counter in Glm46V
+48340,5,5,Simplify and fix qwen4 tests
+47604,5,5,Align OlmoHybrid to use a native cache in generate
+45489,5,5,Align gemma3n cache sharing to gemma4
+45473,5,5,"Fix EP: RouterParallel shape, tp_plan property, grouped_mm sentinels"
+44674,5,5,Officially launch parse_response
+44420,5,5,[docs] distributed training
+44277,5,5,Use doc-builder runnable example for GLM-ASR
+48368,6,5,fix qwen4exp-fp8 ple embedding
+48201,6,5,Skip the expert-parallel sentinel masking when expert parallelism is off
+48071,8,5,Add an opt-in per-frame pixel cap (cap_pixels_per_frame) to the Qwen3-VL video processor
+47964,9,5,Improve group images by shape
+47112,9,5,Fix output labels for AudioFlamingo3 (and related) models
+46496,9,5,Use torchvision's native LANCZOS interpolation instead of PIL fallback
+48363,10,5,[`DSA`] Fix vanillas SDPA with padding
+45513,10,5,[Qwen3.5] Fix GDN linear attention multi-token cached forward
+48796,1,4,Add integration tests for MuseGlimmerAssistantModel
+48717,1,4,[docs] mrope and axial rope
+47995,1,4,"[Whisper] Fix integration test failures on A10G (dtype, stale values, API changes)"
+47301,1,4,[docs] MTP support
+45818,1,4,trainer: clear MPS graph cache via torch_empty_cache_steps
+45554,1,4,[docs] multi-turn tool calling
+45011,1,4,skip 2 invalid test cases for pi0 model
+44684,1,4,update flex attention to use `return_aux` instead of `return_lse` when torch verison >= 2.9
+48679,2,4,[MusicgenMelody] Fix conditioning silently dropped at generation step 0
+48595,2,4,Fix `AutoModel.from_pretrained` not restoring `modules_to_save` weights
+48364,2,4,fix(generation): Enforce the auto-compile cache check for encoder-decoder models
+47953,2,4,fix(pipeline): preserve model.generation_config precedence over pipeline defaults (#47752)
+47094,2,4,[sdpa] Allow prefill to use FA kernel with StaticCache
+46826,2,4,docs(trainer): add JIT checkpointing to trainer recipes
+46662,2,4,Smovlm: pad videos up to max frames
+46590,2,4,feat(generation): allow user to keep input tensors on cpu
+46325,2,4,feat(quantizers): support non-weight param names in TorchAo safetensors loading
+46278,2,4,qa: fix ty caching and align CI with local run
+48540,3,4,[docs] Add a LiteRT page under community integrations
+47005,3,4,Add tiny_model_id support to ProcessorTesterMixin for memory-sensitive tests
+46724,3,4,[DiffusionGemma] return_dict_in_generate=False for image-text-to-text…
+46102,3,4,init FSDP through from_pretrained
+46091,3,4,Update tokenizer mappings to use TokenizersBackend for additional models
+45577,3,4,Allow for registered experts from kernels hub
+45568,3,4,Gemma4: fix failed test cases
+44286,3,4,Add future model support for Fouroversix
+47525,4,4,Allow position_ids_start=2 on DataCollatorWithFlattening for RoBERTa etc.
+47338,4,4,ci: cover xet as well (runtime error)
+47253,4,4,🚨 Pass tp_plan from lm_heads
+47172,4,4,Switch mlinter to 0.1.2
+46372,4,4,Fix: interleaved RoPE application for MLA and Support Index Cache DSA indexer skip-topk sharing for GLM5
+44227,4,4,[CB] Small fixes
+47687,5,4,[docs] Fix failing doctests
+47652,5,4,Fix compressed tensors impl 
+47576,5,4,[nit] use requires_backends
+47118,5,4,[cache] Simplify cache dispatch based on layer_types
+46195,5,4,Fall back to flat kwarg when modality dict is passed without it
+45463,5,4,Fix response api support 
+45409,5,4,from_pretrained orchestration + distributed save/load
+45348,5,4,Fix `apply_chat_template` crash on `tool_call` messages without content
+44063,5,4,Update AFMoE architecture to use v5-style MoE impl
+46070,6,4,[CB] [Major] Rework manager to have clearer control flow + handle TP
+45775,6,4,make sure we call check_auto in CI
+45612,6,4,[docs] update model cards
+45585,6,4,qa: bumped mlinter and allow local override
+44881,6,4,Allow arbitrary template kwargs in processors
+46423,7,4,Add GB10/SM121 Hub-kernel path for Qwen3.6 Gated DeltaNet
+44879,7,4,refactor: unify QA calls
+44789,7,4,Fix config loading issues (type issues)
+48081,8,4,Allow capturing only necessary hidden_states with capture_outputs
+47447,8,4,[cache] Allow sliding window layers to be roll-backed for speculative decoding
+46920,8,4,Adapt voxtral_realtime to mistral-common 1.11.5 audio API
+45821,9,4,[CB] [Major] Add tensor paralellism
+44664,9,4,:rotating_light: Generic Sequence Classifier works for multimodal models
+47619,10,4,better guarding to handle torch compiled with USE_DISTRIBUTED=0
+48469,1,3,[InternVL] Normalize num_patches before np.cumsum
+48426,1,3,[serge] Fix 1 integration tests regressed by commit bd9509355c8a (PR #47493)
+48314,1,3,Quiet continuous batching at default verbosity
+48260,1,3, Add a regression test for force_accelerate_hooks signature preservation 
+47950,1,3,[docs] Cache crop
+46517,1,3,extend DeepseekV4FlashIntegrationTest to non-cuda device
+46507,1,3,[docs] 4D attention masks
+46379,1,3,Update hub metadata
+45949,1,3,[docs] new attention mask helpers
+45687,1,3,fix: Added Mps support in float fallback backends list 
+45611,1,3,"Raise clear error for `problem_type=""single_label_classification""` with `num_labels=1`"
+45046,1,3,chore: speedup modular converter (~30%)
+44903,1,3,Support SizeDict import in get_size_dict
+44696,1,3,Fix `supports_{tp/pp}_plan`
+44436,1,3,Fix continuous batching for multimodal models
+44173,1,3,fix(flaky): `test_generate_with_and_without_position_ids` in GLM ORC
+44132,1,3,[voxtral] fix voxtral proc
+43910,1,3,Update expected output for Jais2 model tests
+43865,1,3,update somes audio models
+48797,2,3,Restore legacy tensor-parallel initialization for compatibility
+48341,2,3,Fix `safe_open` mmap memory exhaustion on Windows by using `pread` backend
+47888,2,3,Fix ASR pipeline mono conversion for channels-last audio (fixes #47886)
+47322,2,3,adding amd quark config class changes
+47303,2,3,Route chat management calls to the service root (#47138)
+47166,2,3,extend tests/quantization/gptq/test_gptq.py::GPTQTestCUDA and tests/q…
+46176,2,3,[Gemma4] Replace one-hot matmul with F.embedding in position embeddings
+45974,2,3,Enable kernels-community/metal-flash-sdpa on MPS
+45843,2,3,fix model parallel issues for deimv2
+45610,2,3,Fix configuration reading and error handling for kernels
+45528,2,3,qa: re-run modular converter when the script itself is modified
+45480,2,3,Update quants tests 
+45455,2,3,[`fix`] Make Qwen2_5OmniProcessor warning a lot less noisy via warning_once
+45078,2,3,throw error when conversion required
+44930,2,3,fix: split MXFP4 dependency checks for specific error messages
+44739,2,3,fix series of failed test case for janus model
+44611,2,3,fix(models): Forward timm model kwargs to timm.create_model for OmDet-Turbo
+48443,3,3,[`Kernels`] Enable functions into kernels registry and allow non inheritance
+48208,3,3,Fix expert parallelism through Trainer
+47900,3,3,Fix DynamicCache reconstruction during ExecuTorch export
+47826,3,3,Update AutoRound XPU/CPU backend
+47422,3,3,CI: fix torchaudio pinning +proper break in rnnt
+47403,3,3,Fix Qwen2.5-Omni Token2Wav DiT rotary embedding layout (interleaved cos/sin)
+47330,3,3,[CB] Automatically switch attention implementation to flash
+47261,3,3,Fix gradient inflation when combining label smoothing with gradient accumulation
+47233,3,3,Fix Hunyuan-VL PIL image resize parity with reference preprocessing
+47164,3,3,Improve Trainer DataLoader Controls for Streaming and Multiprocessing
+47127,3,3,fix bugs for clvp model
+46895,3,3,Fix CohereASR training-loss double-shift (same as Moonshine fix #46784)
+46819,3,3,Fix beam search for mamba models
+46755,3,3,[`Kernels`] Trigger proper kernelization on `use_kernels=True`
+46268,3,3,Add some AITER kernel routing for ROCm
+46204,3,3,Fix `num_items_in_batch` over-counting for causal LM losses
+46111,3,3,Fix a regression in encoder-decoder generation cache initialization
+45790,3,3,No agent PR descriptions
+45336,3,3,"[gemma4] Remove all shared weights, and silently skip them during loading"
+44804,3,3,[docs] peft
+44761,3,3,model-linter: Added rule 10
+44319,3,3,Support non-gated experts
+43936,3,3,Fix failed unit tests for moonshine_streaming model
+43806,3,3,Update TrainingArguments
+48290,4,3,[conftest] Use get_cpu_ram_total_gib for psutil patch (cgroup-aware)
+46876,4,3,Fix auto-mappings registration for remote code & fixes a few custom code issues
+46705,4,3,add distributed config
+46189,4,3,Update cohere2_moe tp_plan
+44983,4,3,fix: add identity reverse_op to dequantize ops for save_pretrained
+44605,4,3,[docs] zero + sequence parallelism
+48205,5,3,Fix expert-parallel training: NaN gradients and missing gradient contributions
+47871,5,3,Make muse glimmer exportable
+47019,5,3,fix mask return-type contract regression and add correctness guard for
+46881,5,3,QwenVL model conversion
+46514,5,3,Honor a concrete dtype in AutoModel for composite checkpoints
+46074,5,3,[ALM] flaky alm tests
+45394,5,3,fix(x_clip): fix 8 failed test cases
+44949,5,3,Fix: NotebookProgressCallback crash when evaluating with the Trainer
+44437,5,3,protect imports
+46587,6,3,[CB] Fix offloading
+45319,6,3,fix: dont download artifacts from the test hub
+45109,6,3,Fix T5Attention shape mismatch under Tensor Parallelism
+45013,6,3,feature: added import complexity checker
+44632,6,3,[AMD CI] Fix test failures across important models 
+48155,7,3,unifying device_mesh init to enable PP + TP inference
+46166,7,3,"Romanian translation of README.md, index.md, installation.md, _config.py and quicktour.md."
+45633,7,3,CircleCI with torch 2.11
+47399,8,3,Fix Cosmos 3 Edge Patch packing order
+44474,9,3,[Bugfix] fix video inference of qwen3vl and qwen3.5 series
+47216,10,3,Compressed tensors fp8
+46712,10,3,[CB] Changes to increase max_batch_tokens
+44271,10,3,Add GreedyLR adaptive learning rate scheduler
+44078,10,3,[`fix`] Set input_modalities on various architectures that aren't just text
+48650,1,2,[fix] Fix GlmOcr integration tests: wrong token IDs and image token decode bug
+48343,1,2,Fix missing FP8 TP layer overrides
+48284,1,2,CI: fix muse OOMs
+48013,1,2,Cpmant fix use cache
+47863,1,2,Bump default flash-attn2 hub kernel version to v3
+47481,1,2,fix: guard DTensor import in sharding_utils.py for PyTorch < 2.5
+47383,1,2,[Kimi] add integration tests
+47315,1,2,Fix MoE expert decompression for non-32-divisible bit widths
+47073,1,2,Fix DeepSpeed SP loss aggregation and LocalLayerRepository kwargs
+46871,1,2,[docs] AITER kernels
+46811,1,2,call transformers-ci in a nightly run
+46675,1,2,[docs] keep generation tensors on cpu
+46337,1,2,Fix tests: 'Cohere2MoeModel' object has no attribute 'hf_device_map'
+46262,1,2,fix: convert to fp32 first when doing image resize
+46220,1,2,[`Configs`] Fix layer type validation to include its mlp counterpart
+46028,1,2,Support FA2 flash_attn_with_kvcache for XPU continuous batching
+45811,1,2,Warn about forgetting attention mask functions
+45602,1,2,[AMD CI] Fix expectations for Gemma3n
+45434,1,2,better grad acc tests
+45268,1,2,Fix `Qwen2IntegrationTest`
+44895,1,2,Add static FP8 expert support 
+44588,1,2,Fix llama4 bnb mode
+44455,1,2,fix pin_memory for contiguous batching
+44340,1,2,Fix speculative tests that are flaky with SDPA
+44329,1,2,Enable Liger Kernel when doing hyperparameter search.
+43981,1,2,Fix early image processor return not raising error
+48601,2,2,[docs] Per-layer config
+48597,2,2,Fix `generate_flags` parsing in `transformers chat`
+48083,2,2,replace xpu-smi subprocess call in benchmark_v2
+48074,2,2,[Video] Warn and return all frames when num_frames exceeds total_num_frames
+48028,2,2,[Whisper] Fix decoder position IDs for left-padded batches in longform generation
+47939,2,2,Declare sdpa support in `TimmWrapper`
+47725,2,2,Simplify reverse weight conversion
+47708,2,2,Fix sliding window cache index off-by-one on wraparound
+47351,2,2,CPU can incur a slow path on non-contiguous magnitudes
+47074,2,2,Normalize multimodal input keys in AnyToAnyPipeline
+46935,2,2,Fix `TrackioCallback` fails to log evaluation metrics after training ends
+46898,2,2,Fix Florence2 training-loss double-shift (same pattern as Moonshine #…
+46842,2,2,[glm-moe-dsa] Indexer uses interleaved rope
+46766,2,2,[`peft`] Support key_mapping with PEFT models
+46749,2,2,[Offloading] Support full disk offloading
+46748,2,2,Fix offloaded cache device mismatch on hybrid models
+46691,2,2,add conversion scripts for EUPE
+46670,2,2,[Continuous Batching] Snapshot generation outputs without mutating request state
+46207,2,2,Use inspect.getsource instead of open() for source-reading in _can_set_*_implementation
+46145,2,2,Fix load_adapter OOM caused by full-model warmup sizing
+46142,2,2,Fix TypeError on list-typed ignore_keys_at_rope_validation in RoPE config
+46125,2,2,Fix _is_package_available reporting available without a version
+46049,2,2,Fix Gemma4 generation from inputs_embeds and per_layer_inputs
+45898,2,2,[fix] Add `fatal_error` to `ContinuousBatchingManager` so the serving layer can detect a dead CB worker
+45547,2,2,Add disable_mmap kwarg to from_pretrained with hf-mount auto-detection
+45444,2,2,[`fix`] Always early return for non-Mistral models in _patch_mistral_regex
+45418,2,2,[serve] Forward `tool_calls`/`tool_call_id` in processor inputs
+45402,2,2,Fix ZeRO-3 from_pretrained: load registered buffers in _load_state_dict_into_zero3_model
+45386,2,2,[GGUF] Reduce peak RAM usage by casting dequantized tensors early during load
+45279,2,2,add expert parallelism for gemma-4-26B-A4B-it
+45258,2,2,Fix `SmolVLM` video processor `resize` using wrong interpolation after backend refactor
+44854,2,2,Fix core dumped when `NemotronH` is torch compiled
+44730,2,2,Fix `mlcd` auto config/model/mapping issues
+44668,2,2,Add `base_model_tp_plan` to `OlmoeConfig`
+44473,2,2,fix FSDP loading with meta devices
+44350,2,2,skip 1 invalid test case for higgs_audio_v2
+44232,2,2,chore: added CLAUDE.md alias
+44095,2,2,Fix loading logic issue
+43983,2,2,Migrate GPT2 to standardized output capture decorators
+43928,2,2,fix(models): Preserve custom token IDs through DiaConfig save and load
+48675,3,2,fix videomae load error
+48616,3,2,Fix `AutoImageProcessor` requiring torchvision when only Pillow is installed
+48325,3,2,Fix Zamba2 construction for num_mem_blocks > 1 checkpoints
+48297,3,2,Raise when a paged attention forward is called with no cache
+47935,3,2,[docs] torchcodec + vision processor features
+47921,3,2,Fix CLIP _init_weights when a child module carries quantized weights
+47731,3,2,[generate] Stop setting the static cache as an attribute to save memory
+47432,3,2,[fix] inkling: mps + cuda mel spec extraction
+47201,3,2,Make executorch exporter tests always use xnnpack backend
+46810,3,2,update kernels-community/aiter-rope version
+46694,3,2,[fix] enable base64 str audio in load_audio
+46472,3,2,feat[vLLM x v5]: Expose max_source_positions on VibeVoiceAsrConfig
+46416,3,2,Fix missing Gemma4Processor._compute_audio_num_tokens
+46403,3,2,fbgemm_fp8:Keep the current device aligned with the input tensor
+45927,3,2,Expose `per_layer_inputs` for every Gemma4 variants
+45770,3,2,Unwrap `text_config` in `AutoModelFor*.from_config`
+45519,3,2,[Trainer] Add ddp_static_graph option
+45492,3,2,Fix: modular image processors
+44972,3,2,[AMD CI] Gemma3/Gemma3n Expectations
+44411,3,2,Update agentic contributions guidelines in AGENTS.md to force yielding.
+44037,3,2,Add a dim check mechanism in Transpose and fix qwen3_vl_moe weight mapping
+43876,3,2,Fix GlmMoeDsaConfig default mlp_layer_types in modular conversion
+48082,4,2,Fix VoxtralRealtime rejecting non-static cache implementations
+47671,4,2,Fix DBRX MoE hidden size and expert GLU transposes
+47628,4,2,fix processor config nested key fallback
+47198,4,2,:rotating_light: Fix GPTBigCode and GPTNeoX for the Transformers modelling backend for vLLM
+47161,4,2,Add exporters min version requirements and test skip
+47146,4,2,[fix] update integration test values
+46839,4,2,Fix mask when generating beyond sliding window
+46690,4,2,Laguna: support per-element output gating
+46619,4,2,fix: position ids does not exist in upstream rotary kernel
+46407,4,2,Triton finegrained fp8/fp4
+43880,4,2,Fix UMT5EncoderModel embedding weights not being tied after loading
+47808,5,2,[Fix] Export crashes on kernel-decorated function
+47623,5,2,Fix fp8_linear compilability 
+47529,5,2,[Chat Parsing] Type inline tool-call arguments from the calling tool's JSON Schema
+47107,5,2,Fix MoE decode optimization for experts living in a submodel
+46732,5,2,fix(aria): use math.ceil in get_number_of_image_patches to match actual patch count
+45799,5,2,Fix `kernelize()` crash for gpt_oss: missing `@use_kernel_func_from_hub` on `apply_rotary_pos_emb`
+45653,5,2,[CB] Better overall script and decode bucketting
+45195,5,2, Use torchvision `decode_image` to load images in the torchvision backend
+45112,5,2,[CB] Add warmup feature
+44848,5,2,Fix few issues in Qwen_3_Omni_Moe
+47872,6,2,Fix Qwen2.5-Omni / Qwen3-Omni-MoE generation with a compilable cache
+47620,6,2,Always tie embeddings for LongT5 and Pop2Piano
+45719,6,2,Speedup Qwen2VLImageProcessor
+45143,6,2,"Add parse_response to Processor, make it a bit more official"
+44976,6,2,Fix tie_word_embedding issues with `Qwen2VL`
+48482,7,2,Fix sliding-window mask `layer_idx` in Gemma3/Gemma4 `create_masks_for_vision_model`
+46850,7,2,🚨 [gemma 3/4] Fix bidirectional attention masking crossing sliding window boundaries
+48490,8,2,"Pass kwargs to the Mamba2 mixer in Nemotron-H, Falcon-H1 and Mamba2"
+46230,8,2,Model parallel fix
+44166,8,2,Improve `has_similar_generate_outputs` assertions
+44145,8,2,Add THD support in ESM
+48186,10,2,Fix kernel commit and repo paths for ESMFold2
