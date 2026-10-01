@@ -1,3 +1,13 @@
+# CONTENT
+ - [Quick Introduction](#quick-introduction)
+ - [I can boast about](#i-can-boast-about)
+ - [Introduction to users](#introduction-to-users)
+ - [Quickstart](#quickstart)
+ - [Introduntion to developers](#introduntion-to-developers)
+ - [Full Guide](#full-guide)
+ - [Evaluations](#evaluations)
+
+
 # Quick Introduction
 1. Get a review for your code changes before pushing it to production or taking valuable time of senior engineer to catch rokie mistakes
 2. see a graphical visualisation of your repository
@@ -29,7 +39,7 @@
 
         launch_gui(absolute_path)
     ```
-    ![Repo Graph Visualization Image](media_assets\repo_graph.png)
+    ![Repo Graph Visualization Image](media_assets/repo_graph.png)
 4. **Code Review** 
     ```python
     from pathlib import Path
@@ -89,7 +99,7 @@
             E --> F
             F --> G[Markdown Report]
 
-    * **Observation:** For every single run, the complete prompt and the response is duly noted in the log files. These log files are named same as their critic name. We can always go and check it if anything goes wrong. Number of tokens consumed and the model used is also stored, so the user can monitor them very easily. [Example Log File](logs\logic_critic.log)
+    * **Observation:** For every single run, the complete prompt and the response is duly noted in the log files. These log files are named same as their critic name. We can always go and check it if anything goes wrong. Number of tokens consumed and the model used is also stored, so the user can monitor them very easily. [Example Log File](logs/logic_critic.log)
     * **Features:** 
         * **Graphical Visualization of the Codebase:** graph of our code base that we built to grab the proper context. We can also use that to visualize the code base in the browser using streamlit.
         * **Custom Agents:** We can employ as many experts as we need. To create those experts or agents, we need to supply the system prompt, how they should behave, and name, what is the name of this particular critic and the client with a particular model selected.
@@ -141,7 +151,7 @@
 
     launch_gui(absolute_path)
     ```
-    ![Repo Graph Visualization Image](media_assets\repo_graph.png)
+    ![Repo Graph Visualization Image](media_assets/repo_graph.png)
 3. **Code Review** 
     ```python
     from pathlib import Path
@@ -228,5 +238,68 @@
     ]
     ```
 
+# Evaluations
+For evaluation, I have tried two methods. First, I tried that. First, I tried that I will evaluate any large GitHub repository which is in Python and also open source GitHub Python library which is used extensively and maintained regularly. So I tried to run evaluations on Hugging Face Transformers repository. I have designed all the tools to extract the ground truth. Like ground truth, I am extracting from comments of contributor and maintainer, commit comments, and their specific code selection that they are commenting on. And by that, I thought this will serve as ground truth for the evaluation. But turns out those comments are not very descriptive. Most of the time it is like done, and any short form. But the main problem with this repository was that the maintainer and the contributor didn't claim any logical, straightforward issues in the code base that can be, like most of the time. It is very rarely in the GitHub repository of that standard and that scale that any real bug and issue security risk is exposed like that. Most of the time they are just minor architectural improvements and adding support to new model or framework like this. Agent code reviewer at this stage cannot identify those issues that human collaborator and maintainer can, because much of the issues that they are trying to solve is the compatibility with other services. So in the current code base there is no ground truth or context of those external services. That's why this GitHub approach did not and provide fruitful result. So I decided to make an extensive [Dummy Fintech Portfolio Manager Repository](https://github.com/RHMTshaikh/buggy_fintech_portfolio_manager.git) and intentionally add bugs in it and watch if the agent reviewer can catch. I built a fintech portfolio manager and intentionally left many kinds of and many levels of and various difficulty levels of issues. The complete repository, this dummy repository, is also published on GitHub. You can see it here, and you can also find the issues that I have introduced in it. I have made eight branches of this dummy repository, and in each branches I have introduced three to five issues. Not only issues, I have also introduced non-critical changes so that I can test my model on false positive cases.
 
-5. 
+Evaluation Results: The evaluation results are stored in the ```evaluations/``` directory.   
+See --> [Evaluation Results](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/branch_accounting-ledger-update.log)  
+See --> [Evaluation Scores](evaluations/evaluation_scores.json)  
+
+**Structure of Evaluation Data**
+
+```Python
+class EvaluationScores(BaseModel):
+    """Nested schema for the detailed evaluation scores."""
+    model_config = {"extra": "forbid"}
+    
+    recall: int = Field(description="Score from 0 to 4 based on the number of ground truth issues successfully found.")
+    root_cause: int = Field(description="Score from 0 to 3 evaluating if the systemic impact was correctly explained according to the repository context.")
+    false_positive_penalty: int = Field(description="Penalty from -3 to 0 for falsely flagging benign code changes as critical bugs.")
+    hallucination_penalty: int = Field(description="Penalty from -2 to 0 for inventing code not present in the diff or asserting fake bugs.")
+    actionability: int = Field(description="Score from 0 to 2 evaluating if the remediation steps are clear, correct, and safe to apply.")
+    discovery_bonus: int = Field(description="Bonus from 0 to 2 for identifying legitimate, severe flaws that were not listed in the Ground Truth.")
+
+class FindingEvaluation(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    original_review_finding_identifier: str = Field(description="Unique identifier description of the issue found by the review agent.")
+    issue_id: Optional[int] = Field(description="Issue ID of the corresponding ground truth issue if it was successfully matched. None if not detected.")
+    severity_correct: Optional[bool] = Field(description="Whether the severity level was correctly assessed. None if not detected.")
+    category_correct: Optional[bool] = Field(description="Whether the category was correctly assessed. None if not detected.")
+    description_correct: Optional[bool] = Field(description="Whether the description of issue correctly represents the problem described in the ground truth.")
+    remediation_quality: Optional[str] = Field(description="Assessment of the suggested remediation steps. None if not detected.")
+    false_positive_flagged: bool = Field(description="Whether the agent incorrectly flagged a safe, benign change as a bug.")
+
+class EvaluatorResponse(BaseModel):
+    """The strict JSON schema the LLM must follow when evaluating the agent."""
+    model_config = {"extra": "forbid"}
+    
+    finding_evaluations: list[FindingEvaluation]
+    missed_ground_truths_ids: list[int] = Field(description="List of issue IDs of the ground truth issues that the agent failed to identify.")
+    reasoning: str = Field(description="Step-by-step logical breakdown of the comparison before scoring.")
+    score: EvaluationScores = Field(description="The overall evaluation scores.")
+```
+
+## Scores
+* **Review Agent:** openai/gpt-oss-120b
+* **Ground Truth Repository:** [Dummy Fintech Portfolio Manager](https://github.com/example/dummy-fintech-portfolio-manager)
+* **Evaluation Agent:** Gemini-3.5-flash-lite
+* **Scores for all branches**
+    * **recall**: [2, 0, 3, 0, 0, 4, 2, 2, 1]
+    * **root_cause**: [2, 0, 2, 0, 0, 3, 2, 2, 2]
+    * **false_positive_penalty**: [ -2, -1, 0, 0, -1, 0, -1, -1, -2]
+    * **hallucination_penalty**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    * **actionability**: [2, 1, 2, 0, 1, 2, 2, 2, 2]
+    * **discovery_bonus**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+* **Average Scores**
+    | parameter | value | range |
+    |-----------|-------|-------------|
+    |**recall**| 1.56 | 0 - 4 |
+    |**root_cause**| 1.44 | 0 - 3 |
+    |**false_positive_penalty**| -0.89 | -3 - 0  |
+    |**hallucination_penalty**| 0.0 | -2 - 0|
+    |**actionability**| 1.56 |  0 - 2 |
+    |**discovery_bonus**| 0.0 |  0 - 2|
+    |**Overall Score**| 7.37 | -5 - 11 |
+
+    **Which amounts to 77% of the maximum possible score.**
