@@ -14,6 +14,14 @@ class ClientInterface(ABC):
     
     @abstractmethod
     def invoke_structured(self, system_prompt: str, user_prompt: str, schema: Type[BaseModel]) -> ClientStructuredResponse:
+        """Invoke the model with structured output based on the provided schema.
+        Args:
+            system_prompt (str): The system prompt to guide the model's behavior.
+            user_prompt (str): The user prompt containing the input data.
+            schema (Type[BaseModel]): The Pydantic schema to validate the model's output.
+        Returns:
+            ClientStructuredResponse: A structured response containing the model's output and metadata.
+        """
         pass
     
     def openai_like_api(self, 

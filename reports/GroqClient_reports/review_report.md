@@ -3105,3 +3105,1424 @@ Error: Error code: 400 - {'error': {'message': 'This model does not support resp
 ---
 <br><br><br>
 
+# TIMESTAMP: 24-09-2026_17-21-19
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 7
+- **Actionable Findings (Validated):** 7
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_deposit`)
+**Line:** `63` | **Confidence:** `96%`
+
+**Problem:** Leaky abstraction and precision loss: converting Decimal to float and back to Decimal breaks the strict financial precision invariant.
+
+**Grounding Reference:**
+> Line 63: `account.cash_balance += Decimal(float(amount))` coerces a Decimal to float, losing exact precision required for monetary values.
+
+**Suggested Remediation:**
+> Maintain Decimal precision throughout; add the amount directly without float conversion. Ensure the cash_balance field is also a Decimal.
+
+**Suggested Fix:**
+
+
+```diff
+-        account.cash_balance += Decimal(float(amount))
++        account.cash_balance += amount
+```
+
+
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `113` | **Confidence:** `97%`
+
+**Problem:** Improper state management: cash balance is increased on a BUY operation, violating double‑entry accounting rules.
+
+**Grounding Reference:**
+> Lines 102‑115: after confirming sufficient funds, the code executes `account.cash_balance += total_value` (line 113) instead of decreasing cash for a purchase.
+
+**Suggested Remediation:**
+> Reverse the cash flow direction for BUY trades: subtract `total_value` from `account.cash_balance`. Align cash_flow sign with ledger entry amount.
+
+**Suggested Fix:**
+
+
+```diff
+-            account.cash_balance += total_value
++            account.cash_balance -= total_value
+```
+
+
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `124` | **Confidence:** `94%`
+
+**Problem:** Improper state management: average cost basis recalculation on SELL is mathematically incorrect and leaks business logic into the ledger layer.
+
+**Grounding Reference:**
+> Line 124: `position.average_cost_basis = (position.average_cost_basis + execution_price) / Decimal("2")` does not reflect proper cost‑basis adjustment for partial sales.
+
+**Suggested Remediation:**
+> Encapsulate cost‑basis logic in a dedicated `Position` domain service or method. Compute new average based on remaining quantity and historic cost, not a simple average of two numbers.
+
+
+
+### 🛑 BLOCKER — `LOGIC` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `113` | **Confidence:** `98%`
+
+**Problem:** Cash balance is increased on a BUY trade instead of being decreased, violating accounting invariants.
+
+**Grounding Reference:**
+> Line 103 checks for sufficient cash, then line 113 executes `account.cash_balance += total_value` which adds cash rather than subtracting it. The corresponding `cash_flow` is set positive on line 114, causing the cash ledger entry to record an inflow instead of an outflow.
+
+**Suggested Remediation:**
+> Subtract the total trade value from the account cash balance for BUY orders and record a negative cash flow.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-            account.cash_balance += total_value
+-            cash_flow = total_value
++            # Decrease cash balance for a purchase
++            account.cash_balance -= total_value
++            # Record cash outflow (negative amount)
++            cash_flow = -total_value
+```
+
+
+
+### 🛑 BLOCKER — `LOGIC` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `126` | **Confidence:** `98%`
+
+**Problem:** Cash balance is decreased on a SELL trade and cash flow is recorded as negative, reversing the correct accounting direction.
+
+**Grounding Reference:**
+> In the SELL branch, line 126 performs `account.cash_balance -= total_value` which removes cash, while line 131 sets `cash_flow = -total_value`, resulting in a negative cash entry. Selling should increase cash and produce a positive cash entry.
+
+**Suggested Remediation:**
+> Add the total trade value to the account cash balance for SELL orders and record a positive cash flow.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-            account.cash_balance -= total_value
+-            
+-            if position.quantity == Decimal("0"):
+-                position.average_cost_basis = Decimal("0")
+-                
+-            cash_flow = -total_value
++            # Increase cash balance for a sale
++            account.cash_balance += total_value
++            
++            if position.quantity == Decimal("0"):
++                position.average_cost_basis = Decimal("0")
++                
++            # Record cash inflow (positive amount)
++            cash_flow = total_value
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `90` | **Confidence:** `93%`
+
+**Problem:** Violation of Single Responsibility Principle: the method mixes validation, business rule calculation, state mutation, and persistence in a single block.
+
+**Grounding Reference:**
+> Lines 90‑148 contain input validation, cash/position updates, cost‑basis logic, journal creation, and session adds—all within one function.
+
+**Suggested Remediation:**
+> Extract distinct responsibilities into separate services: a `TradeValidator`, a `PositionService` for quantity/cost‑basis updates, and a `LedgerWriter` for journal/entry persistence. The orchestrator should coordinate these services.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`Ledger (class)`)
+
+**Problem:** Dependency Inversion violation: Ledger directly depends on SQLAlchemy `Session` and concrete model classes, making unit testing and future storage substitution difficult.
+
+**Grounding Reference:**
+> Methods `_get_account_for_update`, `_get_position_for_update`, and the main transaction functions use `self.session` and import `Account`, `Position`, `LedgerJournal`, `LedgerEntry` directly.
+
+**Suggested Remediation:**
+> Introduce repository interfaces (e.g., `AccountRepository`, `PositionRepository`, `LedgerRepository`) and inject them into the Ledger service. The service should depend on abstractions rather than concrete ORM objects.
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 2609, Requested 6773. Please try again in 10.364999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 24-09-2026_23-28-55
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 6
+- **Actionable Findings (Validated):** 6
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `SECURITY` in `src/portfolio/ledger.py` (`process_deposit`)
+**Line:** `55` | **Confidence:** `95%`
+
+**Problem:** Insecure Direct Object Reference / Broken Access Control – the function accepts an arbitrary `account_id` from the caller and updates the account balance without verifying that the caller is authorized to act on that account.
+
+**Grounding Reference:**
+> Lines 55‑61: `async def process_deposit(self, account_id: uuid.UUID, ... )` → `account = await self._get_account_for_update(account_id)` → `account.cash_balance += ...`. No ownership check is performed before mutating the account.
+
+**Suggested Remediation:**
+> Enforce that the `account_id` used matches the authenticated principal. Either remove the `account_id` argument and resolve the account from the JWT‑derived user ID, or add an explicit permission check against the current user before proceeding.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    async def process_deposit(self, account_id: uuid.UUID, amount: Decimal, reference_id: str, notes: str | None = None) -> LedgerJournal:
+-        """Processes a fiat cash deposit into the account."""
+-        if amount <= Decimal("0"):
+-            raise ValueError("Deposit amount must be strictly positive.")
+-
+-        account = await self._get_account_for_update(account_id)
++    async def process_deposit(self, user_id: uuid.UUID, amount: Decimal, reference_id: str, notes: str | None = None) -> LedgerJournal:
++        """Processes a fiat cash deposit into the account.
++        The `user_id` is extracted from the validated JWT and is used to fetch the
++        account. This prevents callers from supplying an arbitrary `account_id`.
++        """
++        if amount <= Decimal("0"):
++            raise ValueError("Deposit amount must be strictly positive.")
++
++        # Resolve the account belonging to the authenticated user
++        account = await self._get_account_for_update(user_id)
+*** End of File
+```
+
+
+
+### 🛑 BLOCKER — `SECURITY` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `81` | **Confidence:** `95%`
+
+**Problem:** Insecure Direct Object Reference / Broken Access Control – the function accepts an arbitrary `account_id` (and `symbol`) and performs balance/position updates without confirming the caller's authority over that account.
+
+**Grounding Reference:**
+> Lines 81‑89: `async def process_trade_settlement(..., account_id: uuid.UUID, symbol: str, ...)` → `account = await self._get_account_for_update(account_id)` → updates to `account.cash_balance` and `position`. No ownership validation is performed.
+
+**Suggested Remediation:**
+> Derive the target account from the authenticated user context instead of trusting a caller‑supplied `account_id`. Add a permission check or replace the parameter with `user_id` resolved from JWT claims.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    async def process_trade_settlement(
+-        self,
+-        account_id: uuid.UUID,
+-        symbol: str,
+-        quantity: Decimal,
+-        execution_price: Decimal,
+-        is_buy: bool,
+-        reference_id: str
+-    ) -> LedgerJournal:
+-        """
+-        Atomically settles a trade execution.
+-        Updates cash, position quantity, cost basis, and writes dual ledger entries.
+-        """
++    async def process_trade_settlement(
++        self,
++        user_id: uuid.UUID,
++        symbol: str,
++        quantity: Decimal,
++        execution_price: Decimal,
++        is_buy: bool,
++        reference_id: str
++    ) -> LedgerJournal:
++        """Atomically settles a trade execution for the authenticated user.
++        The `user_id` is taken from the validated JWT; this prevents IDOR attacks.
++        """
+@@
+-        account = await self._get_account_for_update(account_id)
+-        position = await self._get_position_for_update(account_id, symbol)
++        # Resolve account and position for the authenticated user only
++        account = await self._get_account_for_update(user_id)
++        position = await self._get_position_for_update(user_id, symbol)
+*** End of File
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `81` | **Confidence:** `93%`
+
+**Problem:** Ledger.process_trade_settlement mixes multiple responsibilities (validation, state mutation, double‑entry persistence) violating SRP and OCP, making future transaction types hard to add without modifying this method.
+
+**Grounding Reference:**
+> Lines 94‑118 perform input validation and cash/position balance checks; lines 119‑133 mutate Account and Position state; lines 135‑148 create LedgerJournal and LedgerEntry objects and add them to the session.
+
+**Suggested Remediation:**
+> Extract the validation and business‑rule logic into a dedicated TradeEngine service (e.g., TradeEngine.validate_and_apply) and let Ledger act only as a repository that persists immutable LedgerJournal/Entry objects via an abstract ILedgerRepository. This decouples transaction orchestration from persistence and allows new transaction types to be added by implementing new engine strategies without touching Ledger.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_deposit`)
+**Line:** `63` | **Confidence:** `96%`
+
+**Problem:** process_deposit converts a Decimal to float then back to Decimal (Decimal(float(amount))) breaking the project‑wide absolute financial precision guarantee.
+
+**Grounding Reference:**
+> Line 63: account.cash_balance += Decimal(float(amount)) introduces a float intermediate.
+
+**Suggested Remediation:**
+> Remove the float conversion and add the Decimal amount directly. Ensure any external inputs are already validated as Decimal before reaching this method.
+
+**Suggested Fix:**
+
+
+```diff
+-        account.cash_balance += Decimal(float(amount))
++        account.cash_balance += amount
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`_get_position_for_update`)
+**Line:** `41` | **Confidence:** `88%`
+
+**Problem:** Method name suggests a pure getter but it also creates and persists a new Position when none exists, leaking side‑effects and violating the principle of least surprise and encapsulation.
+
+**Grounding Reference:**
+> Lines 49‑53 check for missing position and then instantiate Position and add it to the session before returning.
+
+**Suggested Remediation:**
+> Rename the method to _get_or_create_position or split into two explicit methods: _get_position (read‑only) and _create_position (write). This makes side‑effects explicit and improves testability.
+
+**Suggested Fix:**
+
+
+```diff
+-    async def _get_position_for_update(self, account_id: uuid.UUID, symbol: str) -> Position:
++    async def _get_or_create_position(self, account_id: uuid.UUID, symbol: str) -> Position:
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `97` | **Confidence:** `91%`
+
+**Problem:** Ledger directly mutates Account.cash_balance and Position fields alongside creating immutable ledger entries, risking state inconsistency if the transaction aborts after mutable updates but before journal persistence.
+
+**Grounding Reference:**
+> Lines 97‑113 modify account.cash_balance and position.quantity/average_cost_basis before journal creation at line 135.
+
+**Suggested Remediation:**
+> Encapsulate mutable state changes within the same atomic unit as ledger entry creation, e.g., by using a UnitOfWork pattern where all state changes are staged and only committed after journal persistence succeeds. Alternatively, make Account and Position read‑only and derive balances exclusively from LedgerJournal entries during reconciliation.
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 400 - {'error': {'message': "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.", 'type': 'invalid_request_error', 'code': 'json_validate_failed', 'failed_generation': 'STATUS: CLEAN'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-19-02
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 6
+- **Actionable Findings (Validated):** 6
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_deposit`)
+**Line:** `63` | **Confidence:** `98%`
+
+**Problem:** Decimal amount is converted to float then back to Decimal, breaking the project's absolute financial‑precision invariant and introducing hidden rounding errors.
+
+**Grounding Reference:**
+> Line 63: `account.cash_balance += Decimal(float(amount))` performs a float conversion before re‑wrapping in Decimal.
+
+**Suggested Remediation:**
+> Keep the value as Decimal throughout; remove the float cast. Also consider quantizing to the required precision before addition.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        account.cash_balance += Decimal(float(amount))
++        # Preserve exact Decimal precision; avoid float conversion.
++        account.cash_balance += amount.quantize(Decimal("0.0001"))
+```
+
+
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_deposit / process_trade_settlement`)
+**Line:** `60` | **Confidence:** `96%`
+
+**Problem:** Both ledger methods modify mutable state (account balances, positions) before persisting immutable journal entries, without an explicit transaction scope, risking partial updates on failure.
+
+**Grounding Reference:**
+> Lines 60‑78 (deposit) and 97‑148 (trade settlement) perform state mutations and then add journal/entries, but no `async with session.begin():` block is present.
+
+**Suggested Remediation:**
+> Wrap the entire operation in an explicit async transaction context to guarantee atomicity. Roll back on any exception before persisting mutable views.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        account = await self._get_account_for_update(account_id)
++        async with self.session.begin():
++            account = await self._get_account_for_update(account_id)
+@@
+-        account = await self._get_account_for_update(account_id)
+-        position = await self._get_position_for_update(account_id, symbol)
++        async with self.session.begin():
++            account = await self._get_account_for_update(account_id)
++            position = await self._get_position_for_update(account_id, symbol)
+```
+
+
+
+### 🛑 BLOCKER — `LOGIC` in `src\portfolio\ledger.py` (`process_trade_settlement`)
+**Line:** `113` | **Confidence:** `97%`
+
+**Problem:** Incorrect cash balance update and cash flow sign for BUY trades
+
+**Grounding Reference:**
+> Lines 102-118 show that for a BUY (is_buy=True) the code adds total_value to account.cash_balance (line 113) and sets cash_flow to a positive total_value (line 114). A BUY should debit cash, i.e., subtract total_value, and cash_flow should be negative to reflect cash outflow.
+
+**Suggested Remediation:**
+> When processing a BUY, subtract the total trade value from the account's cash balance and set cash_flow to the negative of total_value so that ledger entries correctly represent a cash outflow.
+
+**Suggested Fix:**
+
+
+```diff
+-            account.cash_balance += total_value
+-            cash_flow = total_value
++            account.cash_balance -= total_value
++            cash_flow = -total_value
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`process_trade_settlement`)
+**Line:** `97` | **Confidence:** `95%`
+
+**Problem:** Ledger method mixes business calculation (cost basis, cash flow) with persistence, violating Single Responsibility Principle.
+
+**Grounding Reference:**
+> Lines 97-148 contain trade settlement logic, cost basis recomputation, cash balance updates, and direct session.add calls for journal and entries.
+
+**Suggested Remediation:**
+> Extract the accounting calculations into a dedicated TradeSettlementCalculator service and use a LedgerRepository to persist journals and entries. Ledger.process_trade_settlement should orchestrate these components without containing raw business rules.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`Ledger class (overall)`)
+**Line:** `32` | **Confidence:** `94%`
+
+**Problem:** High‑level Ledger service depends directly on SQLAlchemy ORM models and Session, breaching Dependency Inversion Principle and creating tight coupling to the persistence layer.
+
+**Grounding Reference:**
+> Methods _get_account_for_update, _get_position_for_update, and process_* use Account, Position, LedgerJournal, LedgerEntry and self.session directly (lines 32‑54, 55‑80, 81‑148).
+
+**Suggested Remediation:**
+> Define repository interfaces (e.g., AccountRepository, PositionRepository, LedgerRepository) and inject them into Ledger via constructor. This decouples business logic from ORM specifics and eases testing and future storage changes.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/portfolio/ledger.py` (`_get_position_for_update`)
+**Line:** `41` | **Confidence:** `93%`
+
+**Problem:** Method name implies a pure read, yet it creates a Position when missing, leaking persistence side‑effects and violating the Principle of Least Astonishment.
+
+**Grounding Reference:**
+> Lines 41‑53 retrieve a Position and, if not found, instantiate and session.add a new Position before returning it.
+
+**Suggested Remediation:**
+> Separate retrieval and creation: rename to get_position_or_none and introduce a create_position factory method or repository call. Caller should explicitly decide when to create a new Position.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    async def _get_position_for_update(self, account_id: uuid.UUID, symbol: str) -> Position:
+-        """Retrieves or creates a position record."""
+-        clean_symbol = symbol.strip().upper()
+-        stmt = select(Position).where(
+-            Position.account_id == account_id, Position.symbol == clean_symbol
+-        )
+-        result = await self.session.execute(stmt)
+-        position = result.scalar_one_or_none()
+-        
+-        if not position:
+-            position = Position(account_id=account_id, symbol=clean_symbol)
+-            self.session.add(position)
+-        return position
++    async def get_position(self, account_id: uuid.UUID, symbol: str) -> Position | None:
++        """Retrieve an existing Position without side‑effects."""
++        clean_symbol = symbol.strip().upper()
++        stmt = select(Position).where(
++            Position.account_id == account_id, Position.symbol == clean_symbol
++        )
++        result = await self.session.execute(stmt)
++        return result.scalar_one_or_none()
++
++    async def create_position(self, account_id: uuid.UUID, symbol: str) -> Position:
++        """Create a new Position and persist it."""
++        clean_symbol = symbol.strip().upper()
++        position = Position(account_id=account_id, symbol=clean_symbol)
++        self.session.add(position)
++        return position
+```
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6914, Requested 5212. Please try again in 30.945s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-20-46
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 3
+- **Actionable Findings (Validated):** 3
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/ai_advisory/optimization.py` (`generate_target_weights`)
+**Line:** `48` | **Confidence:** `95%`
+
+**Problem:** Dependency Inversion Principle (D) breach: the optimizer directly accesses concrete `self.market_client` and `self.sentiment_engine` implementations, preventing substitution with alternative providers (e.g., cached, test doubles).
+
+**Grounding Reference:**
+> Calls to `self.market_client.get_historical_bars` (line 48) and `self.sentiment_engine.analyze_asset` (line 69) are hard‑coded dependencies.
+
+**Suggested Remediation:**
+> Introduce abstract interfaces `IMarketDataProvider` and `ISentimentProvider`. Inject them via the optimizer's constructor or a DI container. Refactor the optimizer to depend on these abstractions.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-class PortfolioOptimizer:
+-    def __init__(self, market_client: MarketClient, sentiment_engine: SentimentEngine):
+-        self.market_client = market_client
+-        self.sentiment_engine = sentiment_engine
++class IMarketDataProvider(Protocol):
++    async def get_historical_bars(self, symbol: str, lookback_periods: int) -> list[Bar]: ...
++
++class ISentimentProvider(Protocol):
++    async def analyze_asset(self, symbol: str, news_context: str) -> AssetSentiment: ...
++
++class PortfolioOptimizer:
++    def __init__(self, market_provider: IMarketDataProvider, sentiment_provider: ISentimentProvider):
++        self.market_provider = market_provider
++        self.sentiment_provider = sentiment_provider
+@@
+-            bars = await self.market_client.get_historical_bars(sym, lookback_periods=60)
++            bars = await self.market_provider.get_historical_bars(sym, lookback_periods=60)
+@@
+-                sentiment = await self.sentiment_engine.analyze_asset(sym, "Recent earnings report released.")
++                sentiment = await self.sentiment_provider.analyze_asset(sym, "Recent earnings report released.")
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/ai_advisory/optimization.py` (`generate_target_weights`)
+**Line:** `33` | **Confidence:** `92%`
+
+**Problem:** Single Responsibility Principle (S) violation: the method mixes data fetching, statistical computation, AI sentiment integration, risk profile enforcement, and type coercion, making it hard to maintain and extend.
+
+**Grounding Reference:**
+> Lines 45-102 perform market data retrieval, numpy calculations, sentiment calls, risk caps, and Decimal conversion all within a single async function.
+
+**Suggested Remediation:**
+> Decompose the workflow into dedicated services (e.g., MarketDataFetcher, ReturnCalculator, SentimentAdjuster, WeightAllocator, DecimalConverter) and orchestrate them from a thin coordinator. Each service should expose a single, well‑named method.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/ai_advisory/sentiment.py` (`analyze_asset`)
+**Line:** `68` | **Confidence:** `88%`
+
+**Problem:** Leaky abstraction & Open/Closed violation: the fallback heuristic is hard‑coded (positive bias) inside the method, making the behavior non‑configurable and coupling error handling to business logic.
+
+**Grounding Reference:**
+> The `except` block (lines 68‑75) returns a fixed `AssetSentiment` with `sentiment_score=0.8` and `confidence=0.9` regardless of context.
+
+**Suggested Remediation:**
+> Extract fallback strategy into a separate `SentimentFallbackProvider` that can be injected. Allow configuration of default scores and reasoning, and keep `analyze_asset` focused solely on parsing the LLM response.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-            logging.warning(f"LLM validation failed for {symbol}: {str(e)}. Applying heuristic fallback.")
+-            return AssetSentiment(
+-                symbol=symbol.upper(),
+-                sentiment_score=0.8,
+-                confidence=0.9,
+-                reasoning="Heuristic fallback based on historically bullish market drift."
+-            )
++            logging.warning(f"LLM validation failed for {symbol}: {str(e)}. Delegating to fallback provider.")
++            return await self.fallback_provider.provide(symbol)
+*** End of File ***
+@@
+-class SentimentEngine:
+-    async def analyze_asset(self, symbol: str, news_context: str) -> AssetSentiment:
++class SentimentEngine:
++    def __init__(self, fallback_provider: SentimentFallbackProvider):
++        self.fallback_provider = fallback_provider
++
++    async def analyze_asset(self, symbol: str, news_context: str) -> AssetSentiment:
+```
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7526, Requested 4829. Please try again in 32.6625s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 400 - {'error': {'message': "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.", 'type': 'invalid_request_error', 'code': 'json_validate_failed', 'failed_generation': 'STATUS: CLEAN'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-22-31
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 8
+- **Actionable Findings (Validated):** 8
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/core/config.py` (`module level settings instance`)
+**Line:** `98` | **Confidence:** `97%`
+
+**Problem:** Module creates a global mutable Settings instance, introducing tight coupling and hidden shared state across the codebase.
+
+**Grounding Reference:**
+> Line 98 defines `settings = Settings()`, which is imported by other modules (e.g., security.py) leading to implicit dependencies.
+
+**Suggested Remediation:**
+> Remove the global instance. Let FastAPI or the calling code instantiate Settings (or the new Config) and pass it via dependency injection. This isolates configuration and improves testability.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    @field_validator("SECRET_KEY")
+-    @classmethod
+-    def validate_secret_key_entropy(cls, v: str) -> str:
+-        # Dev environments occasionally use shorter keys, bypassing strict length checks temporarily
+-        return v
+-
+-
+-    settings = Settings()
++    @field_validator("SECRET_KEY")
++    @classmethod
++    def validate_secret_key_entropy(cls, v: str) -> str:
++        return v
++
++# NOTE: Do NOT create a module‑level instance. Use dependency injection instead.
+```
+
+
+
+### 🛑 BLOCKER — `LOGIC` in `src/core/security.py` (`decrypt_sensitive_string`)
+**Line:** `114` | **Confidence:** `95%`
+
+**Problem:** Uncaught exception from Fernet.decrypt when encrypted_text is malformed or tampered, causing the application to crash.
+
+**Grounding Reference:**
+> Lines 112-115 call _cipher_suite.decrypt(encrypted_text.encode("utf-8")) without handling InvalidToken or other decryption errors; a malformed ciphertext raises an exception that propagates.
+
+**Suggested Remediation:**
+> Wrap the decryption call in a try/except block catching cryptography.fernet.InvalidToken (and any unexpected exceptions). Log the failure and return an empty string or raise a domain‑specific error as appropriate.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    decrypted_bytes = _cipher_suite.decrypt(encrypted_text.encode("utf-8"))
+-    plaintext = decrypted_bytes.decode("utf-8")
+-    logging.info(f"Successfully decrypted broker credential: {plaintext}")
+-    return plaintext
++    try:
++        decrypted_bytes = _cipher_suite.decrypt(encrypted_text.encode("utf-8"))
++        plaintext = decrypted_bytes.decode("utf-8")
++        logging.info(f"Successfully decrypted broker credential: {plaintext}")
++        return plaintext
++    except Exception as e:  # Prefer specific InvalidToken if imported
++        logging.warning(f"Failed to decrypt broker credential: {e}")
++        return ""
+```
+
+
+
+### 🛑 BLOCKER — `SECURITY` in `src\core\config.py` (`Settings class defaults`)
+**Line:** `27` | **Confidence:** `99%`
+
+**Problem:** Hardcoded cryptographic secrets and database credentials in source code
+
+**Grounding Reference:**
+> Lines 27-34 define SECRET_KEY and ENCRYPTION_KEY with static defaults; lines 45-49 define POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB; lines 66-68 define MARKET_DATA_API_KEY and MARKET_DATA_SECRET_KEY
+
+**Suggested Remediation:**
+> Remove default values for all secrets. Require them to be supplied via environment variables or a secret manager. Use Pydantic's Field(..., env="...") to enforce presence and avoid committing secrets to source control.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    SECRET_KEY: str = Field(
+-        default="dev_secret_key_fallback",
+-        description="Master cryptographic key used for JWT signing and token generation",
+-    )
+-    ENCRYPTION_KEY: str = Field(
+-        default="U2VjdXJlQnl0ZXNGZXJuZXRLZXlGb3JGaW50ZWNoUG9ydGZvbGlvMTI=",
+-        description="Base64-encoded 32-byte key for Fernet symmetric encryption of broker credentials",
+-    )
++    SECRET_KEY: str = Field(
++        ...,
++        env="SECRET_KEY",
++        description="Master cryptographic key used for JWT signing and token generation",
++    )
++    ENCRYPTION_KEY: str = Field(
++        ...,
++        env="ENCRYPTION_KEY",
++        description="Base64-encoded 32-byte key for Fernet symmetric encryption of broker credentials",
++    )
+@@
+-    POSTGRES_USER: str = "portfolio_admin"
+-    POSTGRES_PASSWORD: str = "secure_dev_password"
+-    POSTGRES_DB: str = "fintech_portfolio"
++    POSTGRES_USER: str = Field(..., env="POSTGRES_USER")
++    POSTGRES_PASSWORD: str = Field(..., env="POSTGRES_PASSWORD")
++    POSTGRES_DB: str = Field(..., env="POSTGRES_DB")
+@@
+-    MARKET_DATA_API_KEY: str = "mock-market-key"
+-    MARKET_DATA_SECRET_KEY: str = "mock-market-secret"
++    MARKET_DATA_API_KEY: str = Field(..., env="MARKET_DATA_API_KEY")
++    MARKET_DATA_SECRET_KEY: str = Field(..., env="MARKET_DATA_SECRET_KEY")
+```
+
+
+
+### 🛑 BLOCKER — `SECURITY` in `src\market_data\websocket.py` (`subscribe`)
+**Line:** `70` | **Confidence:** `98%`
+
+**Problem:** Missing verification of client_token allows unauthorized subscription to private channels (broken access control)
+
+**Grounding Reference:**
+> Lines 70-74 add a queue to a private channel based solely on the provided client_token without any authentication check: if client_token: self._local_subscribers[f"private:{client_token}"].add(queue)
+
+**Suggested Remediation:**
+> Validate the client_token against the authenticated user's JWT claims before using it to construct a private subscription. Reject or ignore the token if it does not match the current user identity.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        if client_token:
+-            self._local_subscribers[f"private:{client_token}"].add(queue)
++        if client_token:
++            # Verify that the token belongs to the authenticated user
++            from src.core.security import verify_jwt_token
++            user_id = verify_jwt_token(client_token)
++            if not user_id:
++                raise PermissionError("Invalid or unauthenticated client token")
++            self._local_subscribers[f"private:{user_id}"].add(queue)
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/core/config.py` (`Settings`)
+**Line:** `12` | **Confidence:** `95%`
+
+**Problem:** Settings class aggregates unrelated configuration domains, violating Single Responsibility Principle and Interface Segregation.
+
+**Grounding Reference:**
+> Lines 12‑76 define database, redis, broker, trading guardrails, and other unrelated settings in a single class.
+
+**Suggested Remediation:**
+> Split Settings into multiple domain‑specific settings classes (e.g., DatabaseSettings, RedisSettings, BrokerSettings, TradingGuardrails) and compose them in a top‑level Config object. Each bounded context imports only the settings it needs.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-class Settings(BaseSettings):
+-    # ... all fields ...
+-    POSTGRES_SERVER: str = "localhost"
+-    ...
+-    ALLOW_MARGIN_TRADING: bool = False
+-
+-    @property
+-    def async_database_url(self) -> str: ...
+-    @property
+-    def redis_url(self) -> str: ...
+-
+-    @field_validator("SECRET_KEY")
+-    @classmethod
+-    def validate_secret_key_entropy(cls, v: str) -> str: ...
+-
+-    
+-    settings = Settings()
++class DatabaseSettings(BaseSettings):
++    POSTGRES_SERVER: str = "localhost"
++    POSTGRES_PORT: int = 5432
++    POSTGRES_USER: str = "portfolio_admin"
++    POSTGRES_PASSWORD: str = "secure_dev_password"
++    POSTGRES_DB: str = "fintech_portfolio"
++    DB_POOL_SIZE: int = 20
++    DB_MAX_OVERFLOW: int = 10
++    DB_POOL_TIMEOUT_SECONDS: int = 30
++    DB_POOL_RECYCLE_SECONDS: int = 1800
++    DB_ECHO_SQL: bool = False
++
++    @property
++    def async_database_url(self) -> str:
++        return (
++            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
++            f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
++        )
++
++class RedisSettings(BaseSettings):
++    REDIS_HOST: str = "localhost"
++    REDIS_PORT: int = 6379
++    REDIS_DB: int = 0
++    REDIS_PASSWORD: str | None = None
++    REDIS_TIMEOUT_SECONDS: int = 2
++
++    @property
++    def redis_url(self) -> str:
++        auth_part = f":{self.REDIS_PASSWORD}@" if self.REDIS_PASSWORD else ""
++        return f"redis://{auth_part}{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
++
++class BrokerSettings(BaseSettings):
++    MARKET_DATA_PROVIDER: Literal["mock", "alpaca", "polygon", "bloomberg"] = "mock"
++    MARKET_DATA_API_KEY: str = "mock-market-key"
++    MARKET_DATA_SECRET_KEY: str = "mock-market-secret"
++    BROKER_SANDBOX: bool = True
++
++class TradingGuardrails(BaseSettings):
++    DEFAULT_CURRENCY: str = "USD"
++    MAX_ORDER_VALUE_LIMIT: Decimal = Decimal("500000.00")
++    MAX_PORTFOLIO_LEVERAGE: Decimal = Decimal("2.0")
++    ALLOW_MARGIN_TRADING: bool = False
++
++class CoreSettings(BaseSettings):
++    ENVIRONMENT: Literal["development", "staging", "production", "test"] = "development"
++    PROJECT_NAME: str = "Fintech Portfolio Manager"
++    API_V1_STR: str = "/api/v1"
++    DEBUG: bool = False
++    SECRET_KEY: str = Field(default="dev_secret_key_fallback")
++    ENCRYPTION_KEY: str = Field(default="U2VjdXJlQnl0ZXNGZXJuZXRLZXlGb3JGaW50ZWNoUG9ydGZvbGlvMTI=")
++    API_TIMEOUT_SECONDS: int = Field(default=30)
++    JWT_ALGORITHM: str = "HS256"
++    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
++    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
++
++    @field_validator("SECRET_KEY")
++    @classmethod
++    def validate_secret_key_entropy(cls, v: str) -> str:
++        return v
++
++class Config:
++    core: CoreSettings = CoreSettings()
++    db: DatabaseSettings = DatabaseSettings()
++    redis: RedisSettings = RedisSettings()
++    broker: BrokerSettings = BrokerSettings()
++    trading: TradingGuardrails = TradingGuardrails()
++
++# No global mutable instance; inject Config where needed.
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/core/security.py` (`verify_webhook_signature`)
+**Line:** `120` | **Confidence:** `93%`
+
+**Problem:** Function directly accesses global `settings.SECRET_KEY`, creating tight coupling and hindering unit testing.
+
+**Grounding Reference:**
+> Line 125 uses `settings.SECRET_KEY` inside the function body.
+
+**Suggested Remediation:**
+> Pass the secret key (or a Settings/Config object) as an explicit argument, or retrieve it via FastAPI Depends. This decouples the function from global state.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-def verify_webhook_signature(payload: str, signature: str) -> bool:
++def verify_webhook_signature(payload: str, signature: str, secret_key: str) -> bool:
+@@
+-    secret_bytes = settings.SECRET_KEY.encode("utf-8")
++    secret_bytes = secret_key.encode("utf-8")
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/market_data/websocket.py` (`subscribe`)
+**Line:** `71` | **Confidence:** `90%`
+
+**Problem:** Private token subscription is never removed during cleanup, leading to stale references and potential memory leaks.
+
+**Grounding Reference:**
+> Cleanup loop (lines 84‑87) only discards queues for public symbols; the queue added for `private:{client_token}` is not removed.
+
+**Suggested Remediation:**
+> Track the private subscription key and discard it in the finally block alongside public symbols.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        if client_token:
+-            self._local_subscribers[f"private:{client_token}"].add(queue)
++        private_key = None
++        if client_token:
++            private_key = f"private:{client_token}"
++            self._local_subscribers[private_key].add(queue)
+@@
+-        finally:
+-            # Clean up subscriber references
+-            for s in clean_symbols:
+-                self._local_subscribers[s].discard(queue)
+-                if not self._local_subscribers[s]:
+-                    self._local_subscribers.pop(s, None)
++        finally:
++            # Clean up subscriber references for public symbols
++            for s in clean_symbols:
++                self._local_subscribers[s].discard(queue)
++                if not self._local_subscribers[s]:
++                    self._local_subscribers.pop(s, None)
++            # Clean up private token subscription if it was used
++            if private_key:
++                self._local_subscribers[private_key].discard(queue)
++                if not self._local_subscribers[private_key]:
++                    self._local_subscribers.pop(private_key, None)
+```
+
+
+
+### ⚠️ WARNING — `SECURITY` in `src\core\security.py` (`decrypt_sensitive_string`)
+**Line:** `116` | **Confidence:** `95%`
+
+**Problem:** Logging decrypted broker credentials exposes sensitive data in logs
+
+**Grounding Reference:**
+> Line 116 logs the plaintext after decryption: logging.info(f"Successfully decrypted broker credential: {plaintext}")
+
+**Suggested Remediation:**
+> Remove logging of plaintext credentials. Log only that decryption succeeded without revealing the secret, or log masked value.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    logging.info(f"Successfully decrypted broker credential: {plaintext}")
++    logging.info("Successfully decrypted broker credential")
+```
+
+
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-24-45
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 0
+- **Actionable Findings (Validated):** 0
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 11337, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 10637, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 11342, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-25-49
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 1
+- **Actionable Findings (Validated):** 1
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### ⚠️ WARNING — `SECURITY` in `src/api/v1_market.py` (`get_live_quote`)
+**Line:** `17` | **Confidence:** `90%`
+
+**Problem:** Missing authentication/authorization on market data endpoint allows unauthenticated access (CWE-284: Improper Access Control)
+
+**Grounding Reference:**
+> Function get_live_quote (lines 17-22) only depends on pricing_engine and does not include any security dependency (e.g., Depends(get_current_user)). This permits any caller to retrieve live quotes without a valid JWT, violating the Zero‑Trust API design described in the project documentation.
+
+**Suggested Remediation:**
+> Add an authentication dependency (e.g., Depends(get_current_user)) to the endpoint so that only authenticated users can invoke it. Ensure the security dependency validates the JWT and extracts the user identity before proceeding.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-async def get_live_quote(
+-    symbol: str,
+-    pricing_engine: PricingEngine = Depends(get_pricing_engine),
+-):
++async def get_live_quote(
++    symbol: str,
++    pricing_engine: PricingEngine = Depends(get_pricing_engine),
++    current_user: User = Depends(get_current_user),  # <-- enforce authentication
++):
+```
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 9687, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 9695, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-26-58
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 0
+- **Actionable Findings (Validated):** 0
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 400 - {'error': {'message': "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.", 'type': 'invalid_request_error', 'code': 'json_validate_failed', 'failed_generation': 'STATUS: CLEAN'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-28-33
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 3
+- **Actionable Findings (Validated):** 3
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/market_data/pricing.py` (`get_validated_quote`)
+**Line:** `44` | **Confidence:** `96%`
+
+**Problem:** PricingEngine accesses Cache's private _get_client method, breaking encapsulation and creating tight coupling.
+
+**Grounding Reference:**
+> Line 44: redis_client = await self._cache._get_client() directly calls a private method of Cache.
+
+**Suggested Remediation:**
+> Introduce a public method in Cache (e.g., get_client) or inject a Redis client provider; have Pricing depend on an abstraction rather than concrete Cache internals.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        redis_client = await self._cache._get_client()
++        # Use Cache's public API to obtain a client or perform lock handling
++        redis_client = await self._cache.get_client()
+```
+
+
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/market_data/pricing.py` (`get_validated_quote`)
+**Line:** `71` | **Confidence:** `97%`
+
+**Problem:** Broad exception masking with generic except and fail-open fallback returns stale cached data, violating fail-closed risk policy.
+
+**Grounding Reference:**
+> Lines 71-84 catch Exception, then return cached_again if present, otherwise re-raise, potentially serving stale quotes.
+
+**Suggested Remediation:**
+> Catch specific exceptions (e.g., RedisError, NetworkError), log and propagate; do not fallback to stale data. Raise StaleMarketDataError to block trade execution.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-            except Exception:
+-                if cached_again:
+-                    return TickerQuote(
+-                        symbol=cached_again["symbol"],
+-                        bid=cached_again["bid"],
+-                        ask=cached_again["ask"],
+-                        last_price=cached_again["last_price"],
+-                        volume=cached_again["volume"],
+-                        timestamp=datetime.fromisoformat(cached_again["timestamp"]),
+-                    )
+-                raise
++            except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
++                # Log the failure and enforce fail-closed policy
++                logger.error("Failed to fetch live quote: %s", exc)
++                raise StaleMarketDataError("Live quote unavailable and cache is stale")
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/market_data/cache.py` (`_get_client`)
+**Line:** `69` | **Confidence:** `94%`
+
+**Problem:** Cache creates its own Redis connection pool per instance, leading to tight coupling and potential resource leakage; also not thread-safe for concurrent async calls.
+
+**Grounding Reference:**
+> Lines 69-72 instantiate a new ConnectionPool each time _get_client is first called, tying Cache to Redis implementation.
+
+**Suggested Remediation:**
+> Inject a shared Redis client or connection pool via constructor; make Cache stateless or use a singleton provider. Ensure _get_client is thread-safe.
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8482, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m13pn7vjegqs5chcj67qhwcr` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8479, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+```
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-29-43
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 5
+- **Actionable Findings (Validated):** 4
+- **Hallucinations / Noise Filtered:** 1
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `ARCHITECTURE` in `src/trading/order_book.py` (`submit_order`)
+**Line:** `31` | **Confidence:** `96%`
+
+**Problem:** Mutable default argument 'tags: list = []' leads to shared state across requests, causing unpredictable behavior and violating proper state management.
+
+**Grounding Reference:**
+> Line 31 defines the default list, and line 39 mutates it with tags.append(...), meaning subsequent calls reuse the same list instance.
+
+**Suggested Remediation:**
+> Replace the mutable default with None and initialise a new list inside the function. This isolates per‑call state and prevents cross‑request leakage.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    async def submit_order(self, order_request: OrderCreate, tags: list = []) -> Order:
++    async def submit_order(self, order_request: OrderCreate, tags: list | None = None) -> Order:
+@@
+-        if order_request.client_reference:
+-            tags.append(order_request.client_reference)
++        if tags is None:
++            tags = []
++        if order_request.client_reference:
++            tags.append(order_request.client_reference)
+```
+
+
+
+### 🛑 BLOCKER — `LOGIC` in `src/trading/order_book.py` (`submit_order`)
+**Line:** `31` | **Confidence:** `95%`
+
+**Problem:** Mutable default argument `tags: list = []` leads to shared state across concurrent calls, causing cross‑order tag leakage and race conditions.
+
+**Grounding Reference:**
+> Line 31 defines `tags: list = []`. Subsequent calls to `submit_order` mutate this list via `tags.append(...)` (line 39), so the same list instance is reused for all requests.
+
+**Suggested Remediation:**
+> Replace the mutable default with `None` and create a new list inside the function when needed.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-    async def submit_order(self, order_request: OrderCreate, tags: list = []) -> Order:
++    async def submit_order(self, order_request: OrderCreate, tags: list | None = None) -> Order:
+@@
+-        if order_request.client_reference:
+-            tags.append(order_request.client_reference)
++        # Initialise a fresh tags list for each call if none was provided
++        if tags is None:
++            tags = []
++        if order_request.client_reference:
++            tags.append(order_request.client_reference)
+```
+
+
+
+### 🛑 BLOCKER — `SECURITY` in `src/api/v1_trading.py` (`place_order`)
+**Line:** `17` | **Confidence:** `97%`
+
+**Problem:** User‑controlled `account_id` in the request body overrides the authenticated account, enabling an IDOR / broken access control where an attacker can place orders on any account they know the UUID of.
+
+**Grounding Reference:**
+> Lines 17‑20 define `account_id` from JWT via Depends, but the function logs and forwards `order_in.account_id` (line 28) without validation. The Pydantic schema `OrderCreate` (src/trading/schemas.py) includes an `account_id` field that the client can set, allowing the mismatch.
+
+**Suggested Remediation:**
+> Remove `account_id` from the `OrderCreate` payload or ignore the client‑provided value. Override it with the authenticated `account_id` before processing, and optionally add a validation check that raises if the two differ.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+ async def place_order(
+     order_in: OrderCreate,
+     account_id: uuid.UUID = Depends(get_current_account_id),
+     order_manager: OrderManager = Depends(get_order_manager),
+ ):
+@@
+-    logging.info(f"Received new order request for account {order_in.account_id}")
+-    
+-    order = await order_manager.submit_order(order_in)
++    # Enforce that the order is placed under the authenticated account.
++    # Override any client‑supplied account_id to prevent IDOR.
++    order_in.account_id = account_id
++    logging.info(f"Received new order request for account {account_id}")
++
++    order = await order_manager.submit_order(order_in)
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src/trading/order_book.py` (`submit_order`)
+**Line:** `42` | **Confidence:** `89%`
+
+**Problem:** Direct coupling to concrete PricingEngine and RiskEngine instances violates the Dependency Inversion Principle, making the OrderBook hard to test and extend.
+
+**Grounding Reference:**
+> Lines 42‑43 call self.pricing_engine.get_validated_quote and self.risk_engine.validate_order, assuming concrete implementations are present.
+
+**Suggested Remediation:**
+> Introduce abstract interfaces (e.g., IPricingProvider, IRiskValidator) and inject them via the constructor or FastAPI DI. OrderBook should depend on these abstractions, not concrete classes.
+
+**Suggested Fix:**
+
+
+null
+
+
+
+---
+<br><br><br>
+
+# TIMESTAMP: 28-09-2026_13-31-27
+## Senior Engineer Code Review Report
+### Executive Summary
+- **Total Raw Findings:** 4
+- **Actionable Findings (Validated):** 4
+- **Hallucinations / Noise Filtered:** 0
+
+## Findings & Required Actions
+
+### 🛑 BLOCKER — `LOGIC` in `src\risk\metrics.py` (`calculate_historical_var`)
+**Line:** `75` | **Confidence:** `96%`
+
+**Problem:** VaR calculation returns zero for any loss because it discards negative simulated P&L values.
+
+**Grounding Reference:**
+> Line 75: `return computed_var if computed_var > 0 else Decimal("0.00")` treats a negative VaR (loss) as zero, contradicting the comment that VaR should be a positive loss figure.
+
+**Suggested Remediation:**
+> Return the absolute value of the loss (or the negated negative value) and only clamp to zero when the result is positive (i.e., a gain).
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        return computed_var if computed_var > 0 else Decimal("0.00")
++        # VaR should be a positive number representing potential loss.
++        # If the percentile result is negative (loss), convert to positive magnitude.
++        # If it is positive (gain), VaR is zero.
++        return (-computed_var).copy_abs() if computed_var < 0 else Decimal("0.00")
+```
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src\risk\limits.py` (`validate_order`)
+**Line:** `39` | **Confidence:** `92%`
+
+**Problem:** Method `validate_order` violates Single Responsibility and Open/Closed principles by hard‑coding a linear sequence of heterogeneous risk checks.
+
+**Grounding Reference:**
+> Lines 48‑68 orchestrate structural validation, valuation fetching, buying‑power, concentration, and regulatory checks in a single function, requiring code changes for every new check.
+
+**Suggested Remediation:**
+> Extract each risk check into its own strategy object implementing a common `RiskCheck` interface. Inject a collection of checks (e.g., via constructor) and iterate over them. This decouples the orchestration from concrete checks, enabling extension without modifying `validate_order`.
+
+
+
+### ⚠️ WARNING — `ARCHITECTURE` in `src\risk\limits.py` (`_check_pattern_day_trading`)
+**Line:** `128` | **Confidence:** `88%`
+
+**Problem:** Direct use of `datetime.now(timezone.utc)` violates Dependency Inversion, making the function hard to test and tightly coupled to the system clock.
+
+**Grounding Reference:**
+> Line 128 obtains the current time directly; no abstraction or injectable time provider is used.
+
+**Suggested Remediation:**
+> Introduce a `TimeProvider` abstraction (e.g., `protocol TimeProvider { now() -> datetime }`) and inject it into the class. Replace the direct call with `self.time_provider.now()` to allow deterministic testing and future time‑source changes.
+
+
+
+### ⚠️ WARNING — `LOGIC` in `src\risk\limits.py` (`_check_pattern_day_trading`)
+**Line:** `147` | **Confidence:** `95%`
+
+**Problem:** Off‑by‑one in PDT trade count check – uses >= which blocks trades when the count equals the allowed maximum.
+
+**Grounding Reference:**
+> Line 147: `if recent_trades >= self.MAX_DAY_TRADES_ALLOWED:` raises PatternDayTradingViolationError. The rule should only trigger when trades exceed the limit, not when they are exactly equal.
+
+**Suggested Remediation:**
+> Change the comparison to `>` so that the limit is inclusive.
+
+**Suggested Fix:**
+
+
+```diff
+@@
+-        if recent_trades >= self.MAX_DAY_TRADES_ALLOWED:
++        if recent_trades > self.MAX_DAY_TRADES_ALLOWED:
+```
+
+
+
+### ⚠️ ERROR
+
+```
+
+Provider: GroqClient, Model: openai/gpt-oss-120b
+Error: Error code: 400 - {'error': {'message': "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.", 'type': 'invalid_request_error', 'code': 'json_validate_failed', 'failed_generation': 'STATUS: CLEAN'}}
+
+```
+
+---
+<br><br><br>
+

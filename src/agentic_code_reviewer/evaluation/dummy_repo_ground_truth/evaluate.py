@@ -25,8 +25,8 @@ if __name__ == "__main__":
     print(f"Using Gemini model: {gemini_model}")
     # review_client = OpenAIClient()
     # review_client = GeminiClient(model_name=gemini_model)
-    # review_client = GroqClient()
-    review_client = MistralClient()
+    review_client = GroqClient(model_name="openai/gpt-oss-120b")
+    # review_client = MistralClient()
     # review_client = OpenRouterClient()
     # review_client = CerebrasClient()
     

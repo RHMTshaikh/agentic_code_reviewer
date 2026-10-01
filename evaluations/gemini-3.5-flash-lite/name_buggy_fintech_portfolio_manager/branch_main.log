@@ -1,0 +1,25 @@
+Time Stamp: 28-09-2026_13-26-58
+Branch Name: main
+Model: gemini-3.5-flash-lite
+Latency: 2184.56 ms
+Total Tokens: 3457
+Upload Tokens: 3309
+Download Tokens: 148
+GROUND TRUTH:
+No ground truth available for this branch.
+
+
+RESPONSE:
+  finding_evaluations:
+  missed_ground_truths_ids:
+  reasoning: The agent produced an error due to JSON generation issues and reported 'STATUS: CLEAN'. There were no ground truth issues provided for this evaluation. The agent correctly found nothing, resulting in a clean review with no recall or false positives.
+  scores:
+    recall: 4
+    root_cause: 3
+    false_positive_penalty: 0
+    hallucination_penalty: 0
+    actionability: 2
+    discovery_bonus: 0
+
+====================================================================================================
+

@@ -1,0 +1,78 @@
+Time Stamp: 28-09-2026_13-31-27
+Branch Name: risk-pdt-compliance-gate
+Model: gemini-3.5-flash-lite
+Latency: 2836.87 ms
+Total Tokens: 7515
+Upload Tokens: 6924
+Download Tokens: 591
+GROUND TRUTH:
+Issue ID: 13
+File: src/risk/limits.py
+Severity: Level 3
+Difficulty: Medium
+Category: Privacy & Compliance
+Description: Reg T Margin Leak: Uses overall NAV instead of settled cash when evaluating margin buying power, inflating trading limits with unsettled funds.
+----------------------------------------------------------------------------------------------------
+
+Issue ID: 25
+File: src/risk/limits.py
+Severity: Level 3
+Difficulty: Hard
+Category: Privacy & Compliance
+Description: Rolling Window Calculation Bug: Incorrectly attempts to adjust for weekends by shortening the lookback window, missing valid historical day-trades.
+----------------------------------------------------------------------------------------------------
+
+Issue ID: 32
+File: src/risk/metrics.py
+Severity: Level 3
+Difficulty: Hard
+Category: Financial Logic
+Description: VaR Negative Variance Inversion: Neglects sign convention in historical simulation, outputting zero or negative risk limits during market drops.
+----------------------------------------------------------------------------------------------------
+
+
+
+RESPONSE:
+  finding_evaluations:
+      original_review_finding_identifier: LOGIC in src\risk\metrics.py (calculate_historical_var)
+      issue_id: 32
+      severity_correct: True
+      category_correct: False
+      description_correct: True
+      remediation_quality: Exact, production-ready fixes.
+      false_positive_flagged: False
+      original_review_finding_identifier: ARCHITECTURE in src\risk\limits.py (validate_order)
+      issue_id: None
+      severity_correct: None
+      category_correct: None
+      description_correct: False
+      remediation_quality: None
+      false_positive_flagged: True
+      original_review_finding_identifier: ARCHITECTURE in src\risk\limits.py (_check_pattern_day_trading)
+      issue_id: None
+      severity_correct: None
+      category_correct: None
+      description_correct: False
+      remediation_quality: None
+      false_positive_flagged: True
+      original_review_finding_identifier: LOGIC in src\risk\limits.py (_check_pattern_day_trading)
+      issue_id: None
+      severity_correct: None
+      category_correct: None
+      description_correct: False
+      remediation_quality: None
+      false_positive_flagged: True
+  missed_ground_truths_ids:
+    - 13
+    - 25
+  reasoning: The AI code reviewer successfully identified Issue 32 (VaR calculation handling negative returns incorrectly) and provided an excellent remediation diff. However, it missed Issue 13 (Reg T margin evaluation using NAV instead of settled cash) and Issue 25 (Weekend lookback window calculation bug in PDT checks). Additionally, it flagged two architectural subjective comments and an incorrect logic comparison for PDT (> vs >=, where >= is typically correct for hitting maximum allowed limits) leading to false positive flags.
+  scores:
+    recall: 1
+    root_cause: 2
+    false_positive_penalty: -2
+    hallucination_penalty: 0
+    actionability: 2
+    discovery_bonus: 0
+
+====================================================================================================
+

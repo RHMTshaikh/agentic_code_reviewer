@@ -10,7 +10,7 @@ CWD = Path.cwd()
 # 4. Append your specific file name to the root directory
 MODELS_REGISTRY_FILE_PATH = PACKAGE_ROOT / "models_registry.json"
 
-EVALUATIONS_DIR_PATH = PACKAGE_ROOT / "evaluations"
+EVALUATIONS_DIR_PATH = CWD / "evaluations"
 
 EVALUATION_SCORES_FILE_PATH = EVALUATIONS_DIR_PATH / "evaluation_scores.json"
 

@@ -1,0 +1,60 @@
+Time Stamp: 28-09-2026_13-24-45
+Branch Name: celery-eod-reconcile
+Model: gemini-3.5-flash-lite
+Latency: 2565.77 ms
+Total Tokens: 10835
+Upload Tokens: 10639
+Download Tokens: 196
+GROUND TRUTH:
+Issue ID: 14
+File: tasks/market_sync.py
+Severity: Level 2
+Difficulty: Medium
+Category: Concurrency & State
+Description: Missing Execution Savepoint: Removes the nested transaction wrapper (begin_nested), meaning one failed order execution will taint the entire batch's database session.
+----------------------------------------------------------------------------------------------------
+
+Issue ID: 17
+File: tasks/end_of_day.py
+Severity: Level 3
+Difficulty: Medium
+Category: Financial Logic
+Description: EOD Single-Currency Blindness: Omits the currency filter during ledger summation, adding quantities of EUR, USD, and BTC together 1:1.
+----------------------------------------------------------------------------------------------------
+
+Issue ID: 19
+File: tasks/worker.py
+Severity: Level 2
+Difficulty: Medium
+Category: Performance
+Description: Async Event Loop Hijacking: Introduces a synchronous `time.sleep()` inside the task dispatcher, completely freezing Celery's worker processes.
+----------------------------------------------------------------------------------------------------
+
+Issue ID: 28
+File: tasks/worker.py
+Severity: Level 3
+Difficulty: Hard
+Category: Concurrency & State
+Description: Celery Worker Pool Fork Contamination: Replaces safe `asyncio.run()` with `asyncio.get_event_loop().run_until_complete()`, sharing a single event loop (and underlying DB sockets) across forked Celery worker processes, causing socket corruption.
+----------------------------------------------------------------------------------------------------
+
+
+
+RESPONSE:
+  finding_evaluations:
+  missed_ground_truths_ids:
+    - 14
+    - 17
+    - 19
+    - 28
+  reasoning: The AI agent failed to produce any findings because it encountered rate limit and token size errors (HTTP 413) across all model invocations. Consequently, recall is 0 as all four ground truth issues were missed. No false positives or hallucinations were generated, but no actionable remediation or root cause depth could be assessed since no review output was provided.
+  scores:
+    recall: 0
+    root_cause: 0
+    false_positive_penalty: 0
+    hallucination_penalty: 0
+    actionability: 0
+    discovery_bonus: 0
+
+====================================================================================================
+
