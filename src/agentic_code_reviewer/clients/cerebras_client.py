@@ -26,11 +26,11 @@ class CerebrasClient(ClientInterface):
         self.model_name = model_name
         self.client = Cerebras(api_key=api_key)
 
-    def invoke_structured(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        schema: Type[BaseModel],
+    def invoke_structured(self,
+            system_prompt: str,
+            user_prompt: str,
+            schema: Type[BaseModel],
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
 
         # https://pypi.org/project/cerebras-cloud-sdk/
@@ -38,6 +38,7 @@ class CerebrasClient(ClientInterface):
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema=schema,
+            print_trace=print_trace
         )
         return response
     

@@ -1,4 +1,5 @@
 import operator
+from pathlib import Path
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 from typing import Annotated, List, Optional
@@ -83,11 +84,14 @@ class AgentState(TypedDict):
     linter_annotations: list
     repository_context: Optional[str]
     senior_custom_instructions: Optional[str]
+    report_dir: Optional[Path]
+    current_branch: Optional[str]
 
     # Parallel Fan-In Reducers (operator.add concatenates outputs safely)
     raw_findings: Annotated[List[ReviewFinding], operator.add]
     node_audit_trail: Annotated[List[ReviewNodeAuditEntry], operator.add]
     errors: Annotated[List[ErrorResponse], operator.add]
+    logs: Annotated[List[str], operator.add]
 
     # Arbitrated Final Outputs
     validated_findings: List[ReviewFinding]

@@ -13,7 +13,12 @@ class ClientInterface(ABC):
     MODELS_REGISTRY_FILE_PATH = MODELS_REGISTRY_FILE_PATH
     
     @abstractmethod
-    def invoke_structured(self, system_prompt: str, user_prompt: str, schema: Type[BaseModel]) -> ClientStructuredResponse:
+    def invoke_structured(self,             
+            system_prompt: str,
+            user_prompt: str, 
+            schema: Type[BaseModel],
+            print_trace: bool = False
+        ) -> ClientStructuredResponse:
         """Invoke the model with structured output based on the provided schema.
         Args:
             system_prompt (str): The system prompt to guide the model's behavior.
@@ -25,7 +30,11 @@ class ClientInterface(ABC):
         pass
     
     def openai_like_api(self, 
-        system_prompt: str, user_prompt: str, schema: Type[BaseModel], max_tokens: int = None
+            system_prompt: str,
+            user_prompt: str, 
+            schema: Type[BaseModel],
+            max_tokens: int = None,
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
         try:
             messages = [
@@ -78,10 +87,13 @@ class ClientInterface(ABC):
                 model_name=self.model_name,
             )
         except Exception as e:
-            return self._handel_api_error(e, model_name=self.model_name)
+            return self._handel_api_error(e, model_name=self.model_name, print_trace=print_trace)
 
     def google_like_api(self, 
-        system_prompt: str, user_prompt: str, schema: Type[BaseModel]
+            system_prompt: str,
+            user_prompt: str, 
+            schema: Type[BaseModel],
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
         
         full_prompt = f"SYSTEM INSTRUCTIONS:\n{system_prompt}\n\nUSER PAYLOAD:\n{user_prompt}"
@@ -133,15 +145,17 @@ class ClientInterface(ABC):
                 model_name=self.model_name
             )
         except Exception as e:
-            return self._handel_api_error(e, model_name=self.model_name)
+            return self._handel_api_error(e, model_name=self.model_name, print_trace=print_trace)
         
     @classmethod
-    def _handel_api_error(cls, e: Exception, model_name: str = None):
+    def _handel_api_error(cls, e: Exception, model_name: str = None, print_trace: bool = False) -> ClientStructuredResponse:
         print(f"[ERROR] Provider: {cls.__name__}, Model: {model_name}")
         print(f"Details:\n{str(e)}\n")
-        # trace
-        import traceback
-        traceback.print_exc()
+        
+        if print_trace:
+            import traceback
+            traceback.print_exc()
+            
         return ClientStructuredResponse(
             response=ErrorResponse(error_message=f"Provider: {cls.__name__}, Model: {model_name}\nError: {str(e)}"),
             total_tokens=0,

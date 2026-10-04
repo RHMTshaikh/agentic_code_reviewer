@@ -26,6 +26,20 @@ def _get_git_diff(project_path: Path) -> str:
     if result.stderr:
         print(f"⚠️ Git command error: {result.stderr.strip()}")
     return result.stdout
+
+def _get_current_branch(project_path: Path) -> str:
+    result = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=project_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=True
+    )
+
+    return result.stdout.strip()
     
 def _extract_modified_fqns(git_diff_text: str) -> list[str]:
     """
@@ -100,11 +114,12 @@ def _extract_modified_fqns(git_diff_text: str) -> list[str]:
 
 def get_staged_fqns(project_path: Path) -> list[str]:
     git_diff_text = _get_git_diff(project_path)
+    curr_branch = _get_current_branch(project_path)
     if not git_diff_text:
         return []
     
     modified_fqns = _extract_modified_fqns(git_diff_text)
-    return modified_fqns
+    return modified_fqns, curr_branch
 
 if __name__ == "__main__":
     project_path = Path(r'../document_align').absolute().resolve()

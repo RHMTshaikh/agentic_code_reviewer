@@ -5,3 +5,6 @@ from .groq_client import GroqClient
 from .mistral_client import MistralClient
 from .open_router_client import OpenRouterClient
 from .openai_client import OpenAIClient
+from .orca_router_client import OrcaRouterClient
+from .aion_client import AionClient
+from .cohere_client import CohereClient

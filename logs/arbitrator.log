@@ -10277,3 +10277,1107 @@ Response: {
     }
   ]
 }
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-10-27 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.02,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-12-01 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.02,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-13-18 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.01,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-13-47 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.01,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-14-23 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.01,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_11-57-27 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.01,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 0
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": []
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-02-58 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.05,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 7
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 63,
+      "issue_summary": "Violation of Absolute Financial Precision invariant via float coercion",
+      "grounding_proof": "Line 63 uses `Decimal(float(amount))` despite `amount` already being a Decimal. Project invariant prohibits float usage outside AI/ML.",
+      "suggestion_to_fix": "Remove redundant float conversion. Directly use `amount` parameter which is already Decimal.",
+      "code_patch": "```diff\n- account.cash_balance += Decimal(float(amount))\n+ account.cash_balance += amount\n```",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 113,
+      "issue_summary": "Direct cash_balance modification violates ledger sovereignty",
+      "grounding_proof": "Lines 113/126 modify `account.cash_balance` directly. This creates temporary state inconsistency if transaction fails before ledger commit.",
+      "suggestion_to_fix": "Refactor to calculate balances from ledger entries post-commit. Use database triggers or stored procedures to update materialized views atomically if synchronization is required.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 124,
+      "issue_summary": "Unatomic position cost basis update risks stale data",
+      "grounding_proof": "Line 124 modifies `position.average_cost_basis` without transactional atomicity guarantee. Fails invariant requiring ledger as single source of truth.",
+      "suggestion_to_fix": "Remove direct position updates. Derive position metrics from aggregated ledger entries during reads. Implement compensation workflow for rollback scenarios.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 63,
+      "issue_summary": "Precision loss due to Decimal to float conversion",
+      "grounding_proof": "Line 63: `account.cash_balance += Decimal(float(amount))` converts a Decimal to float, risking precision loss.",
+      "suggestion_to_fix": "Directly use the Decimal amount without float conversion.",
+      "code_patch": "```diff\n- account.cash_balance += Decimal(float(amount))\n+ account.cash_balance += amount\n```",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 124,
+      "issue_summary": "Incorrect average cost basis update on full sell",
+      "grounding_proof": "Line 124 updates basis before checking if quantity becomes zero, leading to incorrect calculation when selling all shares.",
+      "suggestion_to_fix": "Move quantity check before basis update and skip update if quantity will be zero.",
+      "code_patch": "```diff\n         # Check if selling all shares before updating basis\n+        if position.quantity > quantity:\n+            position.average_cost_basis = (position.average_cost_basis + execution_price) / Decimal(\"2\")\n+        else:\n+            position.average_cost_basis = Decimal(\"0\")  # Will be reset to 0 below\n         position.quantity -= quantity\n         account.cash_balance -= total_value\n \n         if position.quantity == Decimal(\"0\"):\n-                position.average_cost_basis = Decimal(\"0\")\n                 \n```",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "WARNING",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 66,
+      "issue_summary": "XSS vulnerability via user-controlled 'notes' in journal description",
+      "grounding_proof": "Journal description is constructed using f-string with user input 'notes' (line 66). If 'notes' contains HTML/JS content and is rendered in a web interface without sanitization, it enables XSS attacks.",
+      "suggestion_to_fix": "Sanitize 'notes' input by escaping HTML characters or using a templating engine that auto-escapes when rendering. Alternatively, store notes in a separate non-HTML context field.",
+      "code_patch": "```diff\n- journal_desc = f\"External Cash Deposit: {notes}\" if notes else \"External Cash Deposit\"\n+ import html\n+ sanitized_notes = html.escape(notes) if notes else None\n+ journal_desc = f\"External Cash Deposit: {sanitized_notes}\" if sanitized_notes else \"External Cash Deposit\"\n```",
+      "confidence_score": 0.85
+    },
+    {
+      "category": "SECURITY",
+      "severity": "WARNING",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 116,
+      "issue_summary": "XSS vulnerability via user-controlled 'symbol' in trade description",
+      "grounding_proof": "Trade description is built using f-string with 'symbol' (line 116/133). If 'symbol' contains malicious characters and is rendered in HTML, it enables XSS.",
+      "suggestion_to_fix": "Escape 'symbol' and other user inputs when constructing the description string. Use proper output encoding when rendering the description in web interfaces.",
+      "code_patch": "```diff\n- desc = f\"Executed BUY order for {quantity} shares of {symbol} at {execution_price}\"\n+ import html\n+ safe_symbol = html.escape(symbol)\n+ desc = f\"Executed BUY order for {quantity} shares of {safe_symbol} at {execution_price}\"\n```",
+      "confidence_score": 0.8
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-04-36 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.06,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 10
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 33,
+      "issue_summary": "Violates Single Responsibility Principle (SRP) and Open/Closed Principle (OCP)",
+      "grounding_proof": "The 150-line generate_target_weights method handles data ingestion (lines 46-51), synchronous math (lines 58-62), AI integration (lines 66-74), risk constraints (lines 83-87), error handling (lines 76-90), and type conversion (lines 92-101). This creates a fragile god-class anti-pattern.",
+      "suggestion_to_fix": "Decompose into single-responsibility components: 1. Data ingestion service 2. MPT calculation service 3. Constraint application service 4. Type conversion utility. Use async task queues for CPU-bound math (line 55 comment indicates awareness but no implementation).",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 67,
+      "issue_summary": "Tight coupling to sentiment_engine implementation",
+      "grounding_proof": "Direct dependency on self.sentiment_engine.analyze_asset() (lines 68-69) with hardcoded news_context parameter. Violates Dependency Inversion Principle (DIP).",
+      "suggestion_to_fix": "Inject an interface (e.g., SentimentAnalyzerProtocol) instead of concrete class. Move news_context generation to a separate context builder service.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 59,
+      "issue_summary": "Assumes uniform historical data lengths across assets",
+      "grounding_proof": "Line 59 uses `len(historical_closes[symbols[0]]) - 1` for returns matrix dimensions. If other symbols have differing data lengths, subsequent assignments in the loop (line 62) will fail due to array size mismatches.",
+      "suggestion_to_fix": "Validate all symbols have identical historical data lengths before matrix creation. Add: `if not all(len(historical_closes[sym]) == len(historical_closes[symbols[0]]) for sym in symbols): raise OptimizationError('Uneven historical data lengths')`",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 80,
+      "issue_summary": "Division by zero in inverse volatility calculation",
+      "grounding_proof": "Line 80 computes `1.0 / variances` without checking for zero variance. Assets with perfectly stable prices (zero variance) cause division errors.",
+      "suggestion_to_fix": "Add epsilon smoothing: `raw_weights = 1.0 / (variances + 1e-9)`",
+      "code_patch": null,
+      "confidence_score": 0.9
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 98,
+      "issue_summary": "Rounding down causes weight sum < 1.0",
+      "grounding_proof": "Line 98 uses `rounding=ROUND_DOWN` for each weight. Cumulative rounding errors prevent the final weights from summing to exactly 1.0, violating the function contract (line 40).",
+      "suggestion_to_fix": "Use rounding mode `ROUND_HALF_UP` and force sum normalization: `decimal_weights = {k: v / total for k, v in decimal_weights.items()} where total = sum(decimal_weights.values())`",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 48,
+      "issue_summary": "Potential SQL Injection via User-Controlled Asset Symbols",
+      "grounding_proof": "User-supplied `symbols` list is directly used in `get_historical_bars` call without evident parameterization. If the `market_client` constructs raw SQL queries via string interpolation, this allows SQL injection.",
+      "suggestion_to_fix": "1. Validate and sanitize symbols against a strict allowlist of valid tickers. 2. Ensure `market_client` uses parameterized queries or ORM methods. 3. Implement query escaping for any dynamic SQL construction.",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\ai_advisory\\sentiment.py",
+      "target_function": "analyze_asset",
+      "line_number": 70,
+      "issue_summary": "Leaky abstraction in LLM fallback",
+      "grounding_proof": "Hardcoded fallback values (lines 71-74) bypass strict AssetSentiment schema validation. Violates project invariant: 'Graceful AI Degradation' requires neutral fallbacks but these contain arbitrary bullish bias.",
+      "suggestion_to_fix": "Implement fallback strategy pattern. Inject fallback configuration via dependency (e.g., FallbackSentimentConfig) instead of magic numbers.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 84,
+      "issue_summary": "Improper state management in risk constraint application",
+      "grounding_proof": "Direct mutation of normalized_weights array (lines 86-87) based on profile.max_equity_exposure. This creates hidden side effects and violates immutable data principles.",
+      "suggestion_to_fix": "Return constraint violations as domain events instead of mutating calculation results. Implement pipeline pattern where constraints are separate stages.",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "LOGIC",
+      "severity": "WARNING",
+      "file_path": "src\\ai_advisory\\sentiment.py",
+      "target_function": "analyze_asset",
+      "line_number": 71,
+      "issue_summary": "Fallback sentiment is bullish instead of neutral",
+      "grounding_proof": "Line 71 sets fallback `sentiment_score=0.8` (bullish) despite comment (line 70) indicating neutral fallback. This introduces unintended bias during LLM failures.",
+      "suggestion_to_fix": "Set fallback score to 0.0: `sentiment_score=0.0`",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "LOGIC",
+      "severity": "WARNING",
+      "file_path": "src\\ai_advisory\\optimization.py",
+      "target_function": "generate_target_weights",
+      "line_number": 86,
+      "issue_summary": "Equity exposure cap misimplementation",
+      "grounding_proof": "Line 86 checks `if np.sum(normalized_weights) > cap` but normalized weights already sum to 1.0. Scaling by `cap` (line 87) leaves unallocated weight (1 - cap), violating risk constraints.",
+      "suggestion_to_fix": "Redistribute excess weight to non-equity assets (requires asset type metadata) or set equity weights to min(original weight, cap * original weight / equity_sum)",
+      "code_patch": null,
+      "confidence_score": 0.8
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-06-32 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.06,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 11
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\config.py",
+      "target_function": "Settings class",
+      "line_number": 27,
+      "issue_summary": "Insecure cryptographic key validation bypass",
+      "grounding_proof": "Lines 93-95: Secret key validation method is a no-op, allowing weak keys in all environments",
+      "suggestion_to_fix": "Implement mandatory entropy checks with environment-specific thresholds. Use separate validation profiles for dev/prod.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\security.py",
+      "target_function": "decrypt_sensitive_string",
+      "line_number": 116,
+      "issue_summary": "Logging of decrypted sensitive data",
+      "grounding_proof": "Line 116: Plaintext credentials logged at INFO level",
+      "suggestion_to_fix": "Remove logging statement. Implement audit logging with redaction for sensitive fields.",
+      "code_patch": "-                logging.info(f\"Successfully decrypted broker credential: {plaintext}\")",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\config.py",
+      "target_function": "Settings instantiation",
+      "line_number": 97,
+      "issue_summary": "Global singleton configuration anti-pattern",
+      "grounding_proof": "Line 97: `settings = Settings()` creates singleton",
+      "suggestion_to_fix": "Replace singleton with dependency injection. Pass configuration explicitly to consumers.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\security.py",
+      "target_function": "decrypt_sensitive_string",
+      "line_number": 114,
+      "issue_summary": "Unencrypted exception on invalid ciphertext",
+      "grounding_proof": "_cipher_suite.decrypt() lacks exception handling for malformed/tampered encrypted_text, violating fail-safe principles.",
+      "suggestion_to_fix": "Wrap decryption in try-except (InvalidToken, etc.) and return error state instead of crashing.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\websocket.py",
+      "target_function": "subscribe",
+      "line_number": 68,
+      "issue_summary": "KeyError on new symbol subscription",
+      "grounding_proof": "self._local_subscribers[s] assumes prior symbol existence. Missing symbols cause KeyError during first subscription.",
+      "suggestion_to_fix": "Use setdefault() to initialize missing symbol entries: `self._local_subscribers.setdefault(s, set()).add(queue)`",
+      "code_patch": "diff --git a/src\\market_data\\websocket.py b/src\\market_data\\websocket.py\nindex 0000000..0000000\n--- a/src\\market_data\\websocket.py\n+++ b/src\\market_data\\websocket.py\n@@ -64,7 +64,7 @@ class MarketDataStream:\n         clean_symbols = [s.strip().upper() for s in symbols]\n         \n         # Register for public market data\n-        for s in clean_symbols:\n+        for s in clean_symbols:\n             self._local_subscribers[s].add(queue)  # Fails if 's' not in dict\n             \n         # Register for private execution notifications if a token is provided\n",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\config.py",
+      "target_function": "Settings",
+      "line_number": 28,
+      "issue_summary": "Hardcoded cryptographic secrets in configuration",
+      "grounding_proof": "Lines 28-32: Default SECRET_KEY and ENCRYPTION_KEY with fixed values. Line 48: Hardcoded POSTGRES_PASSWORD.",
+      "suggestion_to_fix": "1. Remove all default secret values. 2. Load secrets exclusively via environment variables or vault integration. 3. Use `Field(..., min_length=32)` for SECRET_KEY validation.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\core\\security.py",
+      "target_function": "decrypt_sensitive_string",
+      "line_number": 116,
+      "issue_summary": "Logging of decrypted sensitive credentials",
+      "grounding_proof": "Line 116: `logging.info(f\"Successfully decrypted broker credential: {plaintext}\"]` exposes secrets in logs.",
+      "suggestion_to_fix": "Remove logging statement or sanitize output. Use error logging only for decryption failures.",
+      "code_patch": "```diff\n- logging.info(f\"Successfully decrypted broker credential: {plaintext}\")\n+ logging.debug(\"Decryption completed successfully\")\n```",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\market_data\\websocket.py",
+      "target_function": "subscribe",
+      "line_number": 63,
+      "issue_summary": "Global state management in subscriber registry",
+      "grounding_proof": "Lines 63-87: Shared `_local_subscribers` dictionary with direct mutation",
+      "suggestion_to_fix": "Encapsulate subscriber management in dedicated service with thread-safe operations",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "LOGIC",
+      "severity": "WARNING",
+      "file_path": "src\\market_data\\websocket.py",
+      "target_function": "subscribe",
+      "line_number": 85,
+      "issue_summary": "Race condition during subscriber cleanup",
+      "grounding_proof": "Concurrent unsubscribe operations may corrupt _local_subscribers state due to missing atomicity guarantees.",
+      "suggestion_to_fix": "Use asyncio.Lock() around _local_subscribers modifications or thread-safe data structures.",
+      "code_patch": null,
+      "confidence_score": 0.75
+    },
+    {
+      "category": "SECURITY",
+      "severity": "WARNING",
+      "file_path": "src\\market_data\\websocket.py",
+      "target_function": "subscribe",
+      "line_number": 72,
+      "issue_summary": "IDOR risk in private channel subscriptions",
+      "grounding_proof": "Line 72-73: Uses client_token directly for private channel without validation. Comment admits upstream auth assumption.",
+      "suggestion_to_fix": "Implement JWT validation within subscribe method. Verify client_token matches authenticated user before granting private subscriptions.",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "SECURITY",
+      "severity": "WARNING",
+      "file_path": "src\\core\\config.py",
+      "target_function": "validate_secret_key_entropy",
+      "line_number": 94,
+      "issue_summary": "Bypassed cryptographic key strength validation",
+      "grounding_proof": "Lines 94-95: Validation method returns value without entropy checks. Comment indicates temporary bypass.",
+      "suggestion_to_fix": "Enforce minimum 32-byte key length in production. Use `len(v) >= 32` check with environment-aware enforcement.",
+      "code_patch": "```diff\n def validate_secret_key_entropy(cls, v: str) -> str:\n-    # Dev environments... (comment)\n-    return v\n+    if settings.ENVIRONMENT != \"development\" and len(v) < 32:\n+        raise ValueError(\"SECRET_KEY must be >=32 chars in production\")\n+    return v\n```",
+      "confidence_score": 0.9
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-08-00 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.04,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 7
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "PricingEngine.__init__",
+      "line_number": 29,
+      "issue_summary": "Violation of Dependency Inversion Principle via concrete Redis cache coupling",
+      "grounding_proof": "PricingEngine directly instantiates Redis-specific MarketDataCache in constructor (line 30). Cache logic is not abstracted behind an interface.",
+      "suggestion_to_fix": "Define abstract CacheInterface and inject concrete implementation. Refactor MarketDataCache to implement this interface.",
+      "code_patch": null,
+      "confidence_score": 0.92
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\execution.py",
+      "target_function": "ExecutionEngine.__init__",
+      "line_number": 24,
+      "issue_summary": "Tight coupling to LedgerService implementation",
+      "grounding_proof": "ExecutionEngine directly depends on concrete LedgerService (line 28). This violates Open/Closed Principle when modifying ledger logic.",
+      "suggestion_to_fix": "Create LedgerInterface abstraction. Inject interface instead of concrete implementation.",
+      "code_patch": null,
+      "confidence_score": 0.89
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "tasks\\worker.py",
+      "target_function": "run_async",
+      "line_number": 41,
+      "issue_summary": "Global event loop reuse in Celery workers",
+      "grounding_proof": "Uses asyncio.get_event_loop() in worker fork (line 41). Causes state corruption across tasks in prefork model.",
+      "suggestion_to_fix": "Create fresh event loop per task: `loop = asyncio.new_event_loop(); asyncio.set_event_loop(loop)`",
+      "code_patch": "```python\n         loop = asyncio.new_event_loop()\n         asyncio.set_event_loop(loop)\n         return loop.run_until_complete(coro(*args, **kwargs))\n```",
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "tasks/worker.py",
+      "target_function": "run_async",
+      "line_number": 41,
+      "issue_summary": "Unsafe event loop handling in forked Celery workers",
+      "grounding_proof": "Uses `asyncio.get_event_loop()` which inherits broken parent loops in forked processes.",
+      "suggestion_to_fix": "Create a fresh event loop in the worker fork instead of reusing potentially closed loops.",
+      "code_patch": "--- \n+++ \n@@ -41,7 +41,8 @@\n-            loop = asyncio.get_event_loop()\n+            loop = asyncio.new_event_loop()\n+            asyncio.set_event_loop(loop)\n             return loop.run_until_complete(coro(*args, **kwargs))",
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src/market_data/pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 49,
+      "issue_summary": "Race condition in Redis lock acquisition",
+      "grounding_proof": "Lock timeout allows concurrent market data fetches if acquisition takes >5s.",
+      "suggestion_to_fix": "Enforce strict lock acquisition with indefinite blocking or exponential backoff.",
+      "code_patch": "--- \n+++ \n@@ -49,7 +49,7 @@\n-        async with redis_client.lock(lock_key, timeout=5.0, blocking_timeout=5.0):\n+        async with redis_client.lock(lock_key, timeout=30.0):  # Indefinite block with 30s lock TTL\n             # Double-check cache inside the lock",
+      "confidence_score": 0.92
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "tasks\\market_sync.py",
+      "target_function": "_execute_open_orders_async",
+      "line_number": 26,
+      "issue_summary": "Hidden dependencies in task-critical path",
+      "grounding_proof": "Instantiates PricingEngine/LedgerService internally (lines 25-27). Violates Dependency Inversion - dependencies should be injected.",
+      "suggestion_to_fix": "Pass required services as parameters to _execute_open_orders_async()",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "LedgerService",
+      "line_number": 26,
+      "issue_summary": "Violates Single Responsibility Principle",
+      "grounding_proof": "Handles account updates, position management, and ledger entries in single service (lines 32-146). Growing complexity risk.",
+      "suggestion_to_fix": "Split into AccountService, PositionService, and LedgerRecorder",
+      "code_patch": null,
+      "confidence_score": 0.82
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-09-37 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.04,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 7
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 96,
+      "issue_summary": "Violation of Immutable Double-Entry Accounting invariant via direct balance mutation",
+      "grounding_proof": "Lines 63, 112, 124: Direct modification of `account.cash_balance` and `position.quantity` instead of deriving state from immutable ledger entries.",
+      "suggestion_to_fix": "Remove direct balance mutations. Implement materialized view reconstruction via nightly reconciliation jobs that recalculate balances from `LedgerEntry` aggregates. Use ledger entries as sole source of truth.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 44,
+      "issue_summary": "Tight coupling to Redis implementation violating Dependency Inversion",
+      "grounding_proof": "Direct use of `self._cache._get_client()` exposing Redis-specific locking logic in business layer.",
+      "suggestion_to_fix": "Inject abstract `CacheStrategy` interface. Move Redis-specific locking to cache implementation. PricingEngine should depend on abstraction, not concrete Redis client.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src/market_data/pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 48,
+      "issue_summary": "Redis lock acquisition not verified, allowing race conditions during market data fetches",
+      "grounding_proof": "Lock acquisition via `await lock.acquire()` ignores return value, proceeding without lock when acquisition fails.",
+      "suggestion_to_fix": "Check lock acquisition result and retry/raise on failure:",
+      "code_patch": "--- \n+++ \n@@ -48,3 +48,5 @@\n         await lock.acquire()\n+        if not lock.acquired():\n+            raise StaleMarketDataError(\"Failed to acquire market data lock\")\n         try:\n             cached_again = await self._cache.get_latest_quote(clean_symbol)",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src/market_data/pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 68,
+      "issue_summary": "Stale cache fallback violates fail-closed principle during live provider failures",
+      "grounding_proof": "Exception handler returns cached data without revalidating staleness (lines 68-76), bypassing MAX_ACCEPTABLE_STALENESS check.",
+      "suggestion_to_fix": "Add staleness validation for cached data in exception block:",
+      "code_patch": "--- \n+++ \n@@ -68,6 +68,14 @@\n                 if cached_again:\n+                    cached_ts = datetime.fromisoformat(cached_again[\"timestamp\"])\n+                    cache_age = (now - cached_ts).total_seconds()\n+                    if cache_age > self.MAX_ACCEPTABLE_STALENESS_SECONDS:\n+                        raise StaleMarketDataError(\n+                            f\"Cached data for {clean_symbol} is stale (age: {cache_age:.1f}s)\"\n+                        )\n+                    else:\n+                        return TickerQuote(...)  # Existing construction\n                     return TickerQuote(...)",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src/trading/execution.py",
+      "target_function": "attempt_execution",
+      "line_number": 68,
+      "issue_summary": "Truncated UUID in broker reference risks duplicate execution IDs",
+      "grounding_proof": "Uses 8-character UUID substring for unique broker_reference_id field (unique=True constraint).",
+      "suggestion_to_fix": "Use full UUID for broker reference:",
+      "code_patch": "--- \n+++ \n@@ -68,7 +68,7 @@\n             executed_qty = remaining_qty \n             broker_ref = f\"EXEC-{uuid.uuid4().hex[:8].upper()}\"\n-            broker_ref = f\"EXEC-{uuid.uuid4().hex[:8].upper()}\"\n+            broker_ref = f\"EXEC-{uuid.uuid4().hex.upper()}\"\n             execution = TradeExecution(\n                 order_id=order.id,\n                 execution_price=fill_price,",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src/portfolio/ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 99,
+      "issue_summary": "Premature quantization destroys financial precision in trade valuation",
+      "grounding_proof": "Quantizes total_value to 4 decimal places despite Numeric(36,18) schema, violating absolute precision invariant.",
+      "suggestion_to_fix": "Remove quantize call to preserve full precision:",
+      "code_patch": "--- \n+++ \n@@ -99,7 +99,7 @@\n         if is_buy:\n             if account.cash_balance < total_value:\n                 raise InsufficientFundsError(\n-                    f\"Requires {total_value} {account.currency}, but only {account.cash_balance} available.\"\n+                    f\"Requires {total_value:.18f} {account.currency}, but only {account.cash_balance:.18f} available.\"\n                 )\n              \n             # Recalculate average cost basis",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "WARNING",
+      "file_path": "src/core/database.py",
+      "target_function": "TimestampMixin",
+      "line_number": 62,
+      "issue_summary": "Inconsistent timestamp sources between server_default and onupdate",
+      "grounding_proof": "created_at uses DB func.now(), while updated_at uses Python datetime.utcnow(), causing potential time skew.",
+      "suggestion_to_fix": "Use database function for updated_at:",
+      "code_patch": "--- \n+++ \n@@ -61,7 +61,7 @@\n         DateTime(),\n         server_default=func.now(),\n         onupdate=lambda: datetime.utcnow(),\n-        onupdate=lambda: datetime.utcnow(),\n+        onupdate=func.now(),\n         nullable=False,\n     )",
+      "confidence_score": 0.9
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-11-25 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.05,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 7
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 74,
+      "issue_summary": "Fail-open behavior due to broad exception masking violates fail-closed invariant",
+      "grounding_proof": "Lines 71-76: Catches all exceptions during live quote fetch, falls back to potentially stale cache. Project invariant requires fail-closed for market data errors.",
+      "suggestion_to_fix": "Replace broad `except Exception` with specific exceptions (e.g., network errors). Remove cache fallback for critical errors. Add structured logging.",
+      "code_patch": "diff --git a/src/market_data/pricing.py b/src/market_data/pricing.py\n--- a/src/market_data/pricing.py\n+++ b/src/market_data/pricing.py\n@@ -71,7 +71,7 @@ async def get_validated_quote(self, symbol: str) -> TickerQuote:\n                 if age > self.MAX_ACCEPTABLE_STALENESS_SECONDS:\n                     raise Exception(\"Quote is too old\")\n             except Exception as e:\n-                if cached_again:\n+                if isinstance(e, (aiohttp.ClientError, asyncio.TimeoutError)) and cached_again:\n                     return TickerQuote(\n                         symbol=cached_again[\"symbol\"],\n                         bid=cached_again[\"bid\"],\n@@ -82,6 +82,7 @@ async def get_validated_quote(self, symbol: str) -> TickerQuote:\n                         timestamp=datetime.fromisoformat(cached_again[\"timestamp\"]),\n                     )\n                 raise\n+            logger.error(f\"Live quote failed for {symbol}: {str(e)}\")",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\cache.py",
+      "target_function": "get_redis_client",
+      "line_number": 34,
+      "issue_summary": "Redis connection pool recreation causes resource exhaustion",
+      "grounding_proof": "Lines 34-37: Creates new connection pool on every call. Pool should be singleton to prevent FD exhaustion under load.",
+      "suggestion_to_fix": "Implement singleton pattern for connection pool. Use `aioredis.create_redis_pool` with global lifecycle management.",
+      "code_patch": "diff --git a/src/market_data/cache.py b/src/market_data/cache.py\n--- a/src/market_data/cache.py\n+++ b/src/market_data/cache.py\n@@ -30,12 +30,16 @@ from core.settings import settings\n \n _redis_pool: aioredis.Redis | None = None\n \n+async def initialize_redis():\n+    global _redis_pool\n+    _redis_pool = await aioredis.create_redis_pool(settings.redis_url, decode_responses=True)\n+\n async def get_redis_client() -> aioredis.Redis:\n-    \"\"\"Yields a managed Redis client instance from the shared connection pool.\"\"\"\n-    pool = ConnectionPool.from_url(\n-        settings.redis_url,\n-        decode_responses=True\n-    )\n-    return aioredis.Redis(connection_pool=pool)\n+    if not _redis_pool:\n+        await initialize_redis()\n+    return _redis_pool\n+\n+def close_redis():\n+    if _redis_pool:\n+        _redis_pool.close()",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 74,
+      "issue_summary": "Fail-Open on live quote fetch failure violates Fail-Closed invariant",
+      "grounding_proof": "Except block catches all exceptions and returns cached data when live fetch fails. This allows stale data during upstream failures, violating 'Fail-Closed Risk & Execution' principle.",
+      "suggestion_to_fix": "Remove fallback to cached data on live fetch failure. Propagate exceptions to block execution.",
+      "code_patch": "diff --git a/src/market_data/pricing.py b/src/market_data/pricing.py\nindex 87a3f3e..98b4c5d 100644\n--- a/src/market_data/pricing.py\n+++ b/src/market_data/pricing.py\n@@ -71,17 +71,10 @@ class PricingEngine:\n                 if age > self.MAX_ACCEPTABLE_STALENESS_SECONDS:\n                     raise StaleMarketDataError(\"Quote is too old\")\n             except Exception as e:\n-                if cached_again:\n-                    return TickerQuote(\n-                        symbol=cached_again[\"symbol\"],\n-                        bid=cached_again[\"bid\"],\n-                        ask=cached_again[\"ask\"],\n-                        last_price=cached_again[\"last_price\"],\n-                        volume=cached_again[\"volume\"],\n-                        timestamp=datetime.fromisoformat(cached_again[\"timestamp\"]),\n-                    )\n-                raise\n+                # Fail-Closed: No fallback on live fetch failure\n+                raise ServiceUnavailableError(\"Live quote fetch failed and no valid cache\") from e\n \n             # 3. Write-Through to Redis Cache\n             payload: dict[str, Any] = {\n",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 73,
+      "issue_summary": "Generic exception raised instead of domain-specific error",
+      "grounding_proof": "Raises raw Exception(\"Quote is too old\") instead of declared domain exception type. Violates 'Granular domain error hierarchy' invariant.",
+      "suggestion_to_fix": "Replace generic Exception with StaleMarketDataError from core.exceptions.",
+      "code_patch": "diff --git a/src/market_data/pricing.py b/src/market_data/pricing.py\nindex 87a3f3e..1234567 100644\n--- a/src/market_data/pricing.py\n+++ b/src/market_data/pricing.py\n@@ -70,7 +70,7 @@ class PricingEngine:\n \n                 # BUG: Broad exception masking and fail-open behavior.\n                 if age > self.MAX_ACCEPTABLE_STALENESS_SECONDS:\n-                    raise Exception(\"Quote is too old\")\n+                    raise StaleMarketDataError(\"Live quote exceeded maximum acceptable staleness\")\n             except Exception:\n                 if cached_again:\n                     return TickerQuote(",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\market_data\\pricing.py",
+      "target_function": "get_validated_quote",
+      "line_number": 54,
+      "issue_summary": "Unvalidated ISO format parsing enables data corruption",
+      "grounding_proof": "Direct use of fromisoformat on cached timestamp string without validation. Malformed timestamps cause runtime crashes, violating 'Zero-Trust API Boundaries'.",
+      "suggestion_to_fix": "Add ISO format validation and handle parsing errors explicitly.",
+      "code_patch": "diff --git a/src/market_data/pricing.py b/src/market_data/pricing.py\nindex 87a3f3e..98b4c5d 100644\n--- a/src/market_data/pricing.py\n+++ b/src/market_data/pricing.py\n@@ -50,8 +50,13 @@ class PricingEngine:\n             # Double-check cache inside the lock (another worker may have just populated it)\n             cached_again = await self._cache.get_latest_quote(clean_symbol)\n             if cached_again:\n+                try:\n+                    cached_ts_again = datetime.fromisoformat(cached_again[\"timestamp\"])\n+                except ValueError:\n+                    # Invalid timestamp format - treat as cache miss\n+                    cached_again = None\n+                else:\n                 age_again = (now - cached_ts_again).total_seconds()\n                 if age_again <= self.MAX_ACCEPTABLE_STALENESS_SECONDS:\n                     return TickerQuote(",
+      "confidence_score": 0.95
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\api\\v1_market.py",
+      "target_function": "get_live_quote",
+      "line_number": 17,
+      "issue_summary": "Missing Authentication Leading to Broken Access Control",
+      "grounding_proof": "The `get_live_quote` endpoint lacks authentication dependencies, allowing unauthenticated users to access market data. This violates the Zero-Trust API Boundary invariant requiring JWT-based identity extraction.",
+      "suggestion_to_fix": "Add JWT authentication dependency to the endpoint. Modify the function to include `current_user: User = Depends(get_current_user)` and validate permissions before processing the request.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\market_data\\cache.py",
+      "target_function": "_get_client",
+      "line_number": 69,
+      "issue_summary": "Tight coupling to aioredis concrete implementation",
+      "grounding_proof": "Returns aioredis.Redis directly. Violates Dependency Inversion Principle.",
+      "suggestion_to_fix": "Define abstract RedisClientProtocol. Inject dependencies via interface.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-13-06 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.05,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 8
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\schemas.py",
+      "target_function": "OrderCreate model",
+      "line_number": 15,
+      "issue_summary": "Violation of Zero-Trust API Boundaries (IDOR risk)",
+      "grounding_proof": "OrderCreate schema includes `account_id: uuid.UUID` (line 15). This allows clients to submit orders for arbitrary accounts, violating the invariant that identity must be extracted solely from JWT claims via dependency injection.",
+      "suggestion_to_fix": "1. Remove `account_id` from OrderCreate schema. 2. Modify `place_order` endpoint to use JWT-derived account ID exclusively. 3. Update `submit_order` to accept account_id as a parameter instead of reading from order_request.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\order_book.py",
+      "target_function": "submit_order",
+      "line_number": 51,
+      "issue_summary": "Risk validation task exceptions unhandled (Fail-Closed violation)",
+      "grounding_proof": "Risk validation is wrapped in `asyncio.create_task` (line 51) but exceptions are not captured. If validation fails, order creation proceeds regardless (lines 64-80).",
+      "suggestion_to_fix": "Replace `await validation_task` with try/except block. Raise `StaleDataError` or domain-specific rejection exception on failure. Prevent order creation if risk checks fail.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\order_book.py",
+      "target_function": "submit_order",
+      "line_number": 78,
+      "issue_summary": "Premature session flush causes data inconsistency",
+      "grounding_proof": "`self.session.flush()` (line 78) persists order before risk validation completes and transaction commits. Exposes incomplete orders to database queries.",
+      "suggestion_to_fix": "Move flush/commit to after all validations and business logic. Use explicit transaction boundaries with savepoints for retry safety.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\api\\v1_trading.py",
+      "target_function": "place_order",
+      "line_number": 27,
+      "issue_summary": "Insecure Direct Object Reference (IDOR) via logging user-provided account_id",
+      "grounding_proof": "Line 27 uses `order_in.account_id` from the request body for logging instead of the JWT-validated `account_id` parameter.",
+      "suggestion_to_fix": "Replace `order_in.account_id` with the dependency-injected `account_id` in the log statement.",
+      "code_patch": "--- \n+++ \n@@ -27,3 +27,3 @@\n-logging.info(f\"Received new order request for account {order_in.account_id}\")\n+logging.info(f\"Received new order request for account {account_id}\")",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\order_book.py",
+      "target_function": "submit_order",
+      "line_number": 65,
+      "issue_summary": "IDOR violation: Using user-provided account_id for order creation",
+      "grounding_proof": "Line 65 uses `order_request.account_id` (from untrusted request) instead of validated JWT account identifier.",
+      "suggestion_to_fix": "Modify `submit_order` to accept explicit `account_id` parameter and use it for order creation. Sanitize input in API layer before passing to OrderManager.",
+      "code_patch": "--- \n+++ \n@@ -65,3 +65,3 @@\n-account_id=order_request.account_id,\n+account_id=validated_account_id,  # Passed from API layer",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\order_book.py",
+      "target_function": "submit_order",
+      "line_number": 65,
+      "issue_summary": "Insecure Direct Object Reference (IDOR) via user-controlled account_id",
+      "grounding_proof": "Order creation uses `order_request.account_id` (line 65) instead of JWT-derived account. Violates architecture rule: 'API discards user-provided identity fields' (II. Zero-Trust API Boundaries).",
+      "suggestion_to_fix": "1. Remove `account_id` from OrderCreate schema. 2. Pass authenticated account_id to submit_order. 3. Use injected account_id when creating Order.",
+      "code_patch": "diff --git a/src/trading/order_book.py b/src/trading/order_book.py\nindex 8a0b5c3..1e7d4f2 100644\n--- a/src/trading/order_book.py\n+++ b/src/trading/order_book.py\n@@ -53,7 +53,7 @@ async def submit_order(self, order_request: OrderCreate, tags: list = []) -> Ord\n                 account_id=order_request.account_id,  # CWE-285: Improper Access Control\n                 symbol=normalized_ticker,\n                 order_quantity=order_request.quantity,\n-                estimated_price=estimated_price,\n+                estimated_price=estimated_price,  # Remove user-provided account_id usage\n                 is_buy=(order_request.side == \"BUY\")\n             )\n         )\n@@ -65,7 +65,7 @@ async def submit_order(self, order_request: OrderCreate, tags: list = []) -> Ord\n         new_order = Order(\n             account_id=order_request.account_id,  # IDOR VECTOR\n             symbol=normalized_ticker,\n-            side=order_request.side,\n+            side=order_request.side,  # Replace with authenticated_account_id parameter\n             type=order_request.order_type,\n             status=OrderStatus.OPEN,\n             requested_quantity=order_request.quantity,\n",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\trading\\schemas.py",
+      "target_function": "OrderCreate",
+      "line_number": 15,
+      "issue_summary": "Schema includes unauthorized account_id field",
+      "grounding_proof": "OrderCreate model contains `account_id: uuid.UUID` (line 15) despite architectural requirement to discard user-provided identity fields.",
+      "suggestion_to_fix": "Remove account_id from OrderCreate schema. Inject account via authentication dependency.",
+      "code_patch": "diff --git a/src/trading/schemas.py b/src/trading/schemas.py\nindex 3a1b5c3..9e7d4f2 100644\n--- a/src/trading/schemas.py\n+++ b/src/trading/schemas.py\n@@ -15,7 +15,6 @@ class OrderCreate(BaseModel):\n     Payload for submitting a new order to the API.\")\n     account_id: uuid.UUID  # CWE-285: Unauthorized identity field\n     symbol: str = Field(..., min_length=1, max_length=10, description=\"Asset ticker symbol\")\n-    side: OrderSide\n     order_type: OrderType\n     quantity: Decimal = Field(..., description=\"Number of shares/contracts to trade\")\n     client_reference: str | None = Field(None, max_length=50, description=\"Optional client tracking ID\")",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\trading\\models.py",
+      "target_function": "Order model",
+      "line_number": 49,
+      "issue_summary": "Inconsistent order state initialization",
+      "grounding_proof": "Model sets default status to `OrderStatus.PENDING` (line 49), but `submit_order` sets `OrderStatus.OPEN` (line 69). Creates state ambiguity.",
+      "suggestion_to_fix": "Standardize initial state to `OPEN` post-risk-validation. Remove model default or align with business logic flow.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 02-10-2026_19-14-45 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.04,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 7
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\risk\\limits.py",
+      "target_function": "_check_buying_power",
+      "line_number": 76,
+      "issue_summary": "Violation of Dependency Inversion Principle via direct settings access",
+      "grounding_proof": "Direct references to `settings.ALLOW_MARGIN_TRADING` and `settings.MAX_PORTFOLIO_LEVERAGE` create tight coupling to configuration implementation.",
+      "suggestion_to_fix": "Inject configuration dependencies via interface (e.g., `MarginRules`) through constructor. Use dependency inversion for settings access.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\risk\\limits.py",
+      "target_function": "_check_pattern_day_trading",
+      "line_number": 128,
+      "issue_summary": "Temporal coupling via system clock dependency",
+      "grounding_proof": "`datetime.now()` hardcodes time source, violating the Dependency Inversion Principle and hindering testability.",
+      "suggestion_to_fix": "Inject time provider interface (e.g., `ITimeService`) to abstract clock implementation.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\risk\\metrics.py",
+      "target_function": "calculate_historical_var",
+      "line_number": 46,
+      "issue_summary": "Tight coupling to concrete market data client",
+      "grounding_proof": "Direct dependency on `self.market_client` violates Dependency Inversion, obstructing mockability and alternative implementations.",
+      "suggestion_to_fix": "Depend on abstraction (e.g., `IHistoricalDataService`) instead of concrete client implementation.",
+      "code_patch": null,
+      "confidence_score": 0.95
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\risk\\metrics.py",
+      "target_function": "calculate_historical_var",
+      "line_number": 47,
+      "issue_summary": "Off-by-one error in historical data validation for VaR calculation",
+      "grounding_proof": "Line 47 checks `len(bars) < lookback_days` but requires `lookback_days + 1` bars to compute `lookback_days` returns. For example, 252 returns need 253 bars.",
+      "suggestion_to_fix": "Change condition to `if len(bars) < lookback_days + 1:` to ensure sufficient data points.",
+      "code_patch": "diff --git a/src/risk/metrics.py b/src/risk/metrics.py\n--- a/src/risk/metrics.py\n+++ b/src/risk/metrics.py\n@@ -44,7 +44,7 @@\n         historical_returns: dict[str, list[float]] = {}\n         \n         for pos in valuation.positions:\n-            bars = await self.market_client.get_historical_bars(pos.symbol, lookback_periods=lookback_days + 1)\n+            bars = await self.market_client.get_historical_bars(pos.symbol, lookback_periods=lookback_days + 1)\n             if len(bars) < lookback_days:\n                 raise StaleMarketDataError(f\"Insufficient historical data for {pos.symbol} to calculate VaR.\")\n             \n@@ -47,7 +47,7 @@\n                 raise StaleMarketDataError(f\"Insufficient historical data for {pos.symbol} to calculate VaR.\")\n              \n             # Calculate daily logarithmic returns: ln(P_t / P_t-1)\n-            closes = [float(b.close_price) for b in bars]\n+            closes = [float(b.close_price) for b in bars]\n             returns = [math.log(closes[i] / closes[i+1]) for i in range(len(closes)-1)]\n             historical_returns[pos.symbol] = returns\n         \n--  condition should check for `lookback_days + 1` instead of `lookback_days`\n++  Fix: Change `lookback_days` to `lookback_days + 1` in comparison\n \n-            if len(bars) < lookback_days:\n+            if len(bars) < lookback_days + 1:\n                 raise StaleMarketDataError(f\"Insufficient historical data for {pos.symbol} to calculate VaR.\")",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\risk\\limits.py",
+      "target_function": "_check_pattern_day_trading",
+      "line_number": 131,
+      "issue_summary": "Incorrect lookback window calculation for PDT rule enforcement",
+      "grounding_proof": "Lines 131-132 reduce lookback to 3 days on Monday/Tuesday, failing to capture 5 business days. Uses calendar days instead of business days, risking undercounting trades.",
+      "suggestion_to_fix": "Replace calendar-based lookback with business day calculation using `business_timedelta` or similar. Adjust window to ensure 5 business days regardless of weekends.",
+      "code_patch": "diff --git a/src/risk/limits.py b/src/risk/limits.py\n--- a/src/risk/limits.py\n+++ b/src/risk/limits.py\n@@ -124,13 +124,17 @@\n         if valuation.net_asset_value >= self.PDT_MINIMUM_EQUITY:\n             return  # Accounts over $25k are exempt from the trading freeze\n         \n-        # Calculate a rolling 5-day business window\n-        current_time = datetime.now(timezone.utc)\n-        lookback_window = 5\n-        \n-        if current_time.weekday() <= 1:\n-            lookback_window = 3 \n-        \n-        historical_cutoff = current_time - timedelta(days=lookback_window)\n+        # Calculate lookback covering 5 business days, adjusting for weekends\n+        current_time = datetime.now(timezone.utc)\n+        business_days_back = 5\n+        historical_cutoff = current_time - BusinessDay(n=business_days_back)\n+        # Alternative implementation using pandas for business days:\n+        # historical_cutoff = pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=business_days_back)\n+        # historical_cutoff = historical_cutoff.tz_localize('UTC').to_pydatetime()\n+        # Ensure historical_cutoff is timezone-aware datetime\n \n         # Query recent trades from the immutable ledger\n         stmt = select(func.count(LedgerJournal.id)).where(\n--  Replace simplistic calendar window with business day calculation\n++  Use business day adjustment to ensure 5 trading days lookback\n \n-        historical_cutoff = current_time - timedelta(days=lookback_window)\n+        historical_cutoff = current_time - BusinessDay(n=5)  # Requires business day handling library",
+      "confidence_score": 0.9
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\risk\\limits.py",
+      "target_function": "_check_pattern_day_trading",
+      "line_number": 137,
+      "issue_summary": "Data access layer coupling",
+      "grounding_proof": "Direct SQLAlchemy session usage creates persistence layer lock-in.",
+      "suggestion_to_fix": "Delegate database operations to repository pattern (e.g., `ITradeRepository`).",
+      "code_patch": null,
+      "confidence_score": 0.85
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "WARNING",
+      "file_path": "src\\risk\\metrics.py",
+      "target_function": "calculate_historical_var",
+      "line_number": 69,
+      "issue_summary": "Precision leakage in numpy conversion",
+      "grounding_proof": "Float-based numpy calculations risk decimal precision loss before conversion back to `Decimal`.",
+      "suggestion_to_fix": "Implement strict type boundary checks or use decimal-compatible numerical libraries.",
+      "code_patch": null,
+      "confidence_score": 0.8
+    }
+  ]
+}
+
+==================================================
+--- LOG ENTRY 03-10-2026_13-37-30 ---
+Audit Trail: {
+  "node_name": "arbitrator",
+  "model_name": null,
+  "latency_ms": 0.07,
+  "total_tokens": 0,
+  "upload_tokens": 0,
+  "download_tokens": 0,
+  "findings_generated": 6
+}
+System Prompt: --- NOT USING LLM ---
+User Prompt: 
+Response: {
+  "findings": [
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 63,
+      "issue_summary": "Violation of Absolute Financial Precision invariant via float coercion in cash balance update",
+      "grounding_proof": "Line 63: `account.cash_balance += Decimal(float(amount))` converts Decimal to float before conversion back to Decimal, risking precision loss.",
+      "suggestion_to_fix": "Eliminate float coercion. Use Decimal arithmetic directly: `account.cash_balance += amount`",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 124,
+      "issue_summary": "Incorrect average cost basis calculation during sell operations violating financial accuracy invariant",
+      "grounding_proof": "Line 124: `(position.average_cost_basis + execution_price) / Decimal(\"2\")` improperly averages execution price with historical basis instead of removing sold shares' cost.",
+      "suggestion_to_fix": "Replace with FIFO/LIFO cost basis tracking or weighted-average removal. Implement proper lot accounting pattern.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "ARCHITECTURE",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 114,
+      "issue_summary": "Double-entry accounting violation in cash flow direction during trade settlement",
+      "grounding_proof": "Lines 114/131: Buy operations credit cash (incorrect), sell operations debit cash (incorrect). Reversed cash flow signs break ledger parity.",
+      "suggestion_to_fix": "Invert cash_flow sign logic: For buys, debit cash (negative). For sells, credit cash (positive). Align with LedgerEntry documentation.",
+      "code_patch": null,
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 63,
+      "issue_summary": "Precision loss due to unnecessary Decimal-float-Decimal conversion in cash balance update",
+      "grounding_proof": "Line 63 converts `amount` (Decimal) to float then back to Decimal: `Decimal(float(amount))`. This violates the 'Absolute Financial Precision' invariant by introducing floating-point rounding errors.",
+      "suggestion_to_fix": "Directly use the original Decimal parameter without conversion",
+      "code_patch": "diff\n--- \n+++ \n@@ -63,4 +63,4 @@\n-        account.cash_balance += Decimal(float(amount))\n+        account.cash_balance += amount  # Remove float conversion",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "LOGIC",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_trade_settlement",
+      "line_number": 124,
+      "issue_summary": "Incorrect average cost basis update during partial sell orders",
+      "grounding_proof": "Line 124 modifies `average_cost_basis` during sells: `(position.average_cost_basis + execution_price) / Decimal(\"2\")`. This corrupts the cost basis for remaining shares, violating IRS FIFO/average cost basis rules.",
+      "suggestion_to_fix": "Remove cost basis adjustment during sells (only reset to 0 when position is fully closed)",
+      "code_patch": "diff\n--- \n+++ \n@@ -124,4 +124,3 @@\n-            position.average_cost_basis = (position.average_cost_basis + execution_price) / Decimal(\"2\")\n-            \n # [Additional context lines would appear here in full diff]",
+      "confidence_score": 1.0
+    },
+    {
+      "category": "SECURITY",
+      "severity": "BLOCKER",
+      "file_path": "src\\portfolio\\ledger.py",
+      "target_function": "process_deposit",
+      "line_number": 66,
+      "issue_summary": "XSS via user-controlled 'notes' stored in LedgerJournal description",
+      "grounding_proof": "Line 66: `journal_desc = f\"External Cash Deposit: {notes}\" if notes else ...` directly embeds user input into journal description without sanitization.",
+      "suggestion_to_fix": "Sanitize 'notes' input using a library like Bleach to strip HTML/JS before storage. Alternatively, escape output when rendering in frontend.",
+      "code_patch": null,
+      "confidence_score": 0.9
+    }
+  ]
+}

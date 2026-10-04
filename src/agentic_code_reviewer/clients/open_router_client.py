@@ -28,24 +28,28 @@ class OpenRouterClient(ClientInterface):
             base_url="https://openrouter.ai/api/v1",
         )
 
-    def invoke_structured(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        schema: Type[BaseModel],
+    def invoke_structured(self,
+            system_prompt: str,
+            user_prompt: str,
+            schema: Type[BaseModel],
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
 
-        max_tokens = 4096  # Set a default max token limit; adjust as needed
+        max_tokens = 8000  # Set a default max token limit; adjust as needed
         response = self.openai_like_api(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema=schema,
             max_tokens=max_tokens,
+            print_trace=print_trace
         )
         return response
 
 if __name__ == "__main__":
-    client = OpenRouterClient(model_name="z-ai/glm-5.2")
+    client = OpenRouterClient("qwen/qwen3.8-27b:free")
+    models = client.list_available_models()
+    for model in models:
+        client.add_model(model)
     system_prompt = "You are a helpful assistant."
     user_prompt = "Please summarize the following text: 'Cerebras Systems is a company that builds AI hardware and software.'"
     
@@ -53,9 +57,6 @@ if __name__ == "__main__":
         model_config = {"extra": "forbid"}
         summary: str
         
-    try:
-        response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
-        print(response.response.summary)
-    except Exception as e:
-        pass
+    response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
+    print(response)
 

@@ -29,7 +29,7 @@ def evaluator_agent(
     )
     
     start_time = time.perf_counter()
-    client_structured_response = client.invoke_structured(EVALUATOR_SYS_PROMPT, user_prompt, schema=schema)
+    client_structured_response = client.invoke_structured(EVALUATOR_SYS_PROMPT, user_prompt, schema=schema, print_trace=False)
     latency = (time.perf_counter() - start_time) * 1000
     
     response = client_structured_response.response

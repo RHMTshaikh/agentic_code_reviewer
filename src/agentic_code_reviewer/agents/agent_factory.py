@@ -1,7 +1,10 @@
 import time
+import os
+from pathlib import Path
 from typing import Dict, Any
 from agentic_code_reviewer.clients.client_interface import ClientInterface
 from agentic_code_reviewer.logging import log
+from agentic_code_reviewer.paths import LOGS_DIR_PATH
 from agentic_code_reviewer.schemas.state import AgentState, CriticResponse, ErrorResponse, ReviewNodeAuditEntry, ClientStructuredResponse
 
 """ 
@@ -31,7 +34,12 @@ class AgentFactory:
             user_prompt = self.make_user_prompt(state)
             
             start_time = time.perf_counter()
-            client_structured_response = self.client.invoke_structured(self.system_prompt, user_prompt, schema=CriticResponse)
+            client_structured_response = self.client.invoke_structured(
+                self.system_prompt, 
+                user_prompt, 
+                schema=CriticResponse,
+                print_trace=False
+            )
             latency = (time.perf_counter() - start_time) * 1000
 
             response = client_structured_response.response
@@ -58,18 +66,21 @@ class AgentFactory:
                 upload_tokens=upload_tokens,
                 download_tokens=download_tokens
             )
-            log(
+            log_path=LOGS_DIR_PATH / f"{self.agent_name}.log"
+            line_number = log(
                 time_stamp=state.get("time_stamp"),
                 system_prompt=self.system_prompt,
                 user_prompt=user_prompt,
                 response=response,
                 audit_trail=audit,
-                file_name=self.agent_name
+                log_path=log_path
             )
+            report_dir = state['report_dir']
             return {
                 "raw_findings": findings,
                 "errors": error,
-                "node_audit_trail": [audit]
+                "node_audit_trail": [audit],
+                "logs": [f"[Log of `{self.agent_name}` ]({Path(os.path.relpath(log_path, report_dir)).as_posix()}#L{line_number}) -- using model `{model_name}`"],
             }
 
         return agent

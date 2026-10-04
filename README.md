@@ -1,46 +1,53 @@
 # CONTENT
+
  - [Quick Introduction](#quick-introduction)
  - [I can boast about](#i-can-boast-about)
  - [Introduction to users](#introduction-to-users)
  - [Quickstart](#quickstart)
- - [Introduntion to developers](#introduntion-to-developers)
+ - [Introduction to developers](#introduction-to-developers)
  - [Full Guide](#full-guide)
  - [Evaluations](#evaluations)
 
-
 # Quick Introduction
-1. Get a review for your code changes before pushing it to production or taking valuable time of senior engineer to catch rokie mistakes
-2. see a graphical visualisation of your repository
 
-# I can boast about 
- * I have built the fastest codebase graph builder for python codebases using  ```ast``` that can build a graph of 1000 nodes in less than 5 seconds.
+* Get a code review before pushing changes to production. Save valuable senior engineer time by catching rookie mistakes early.
+* View a graphical visualization of your repository.
+
+# I can boast about
+
+* I have built the fastest codebase graph builder for Python codebases using `ast`. It can build a 1000-node graph in under 5 seconds.
 
 # Introduction to users
-1. **How this Agentic reviewer works:** it converts the whole repo into an directed graph with nodes named as their ```fqn``` that is used later to grab the right context, it detectcts the newly added or modified nodes(any classes, methods, functions are nodes and can be in any level of nesting) then it grabs whole defination of the changed entity by anlysing ```git diff``` then using graph it grabs all the nodes that are either used inside of the node in sunject or nodes that are using it(simply put all the nodes that are connected by ```calls``` and ```called_by``` edges to the node in subject) then various agents will work as expertes in various domains and they scritanize the code in their respective domains. By default we have three experts set up
-    1. ```LOGIC``` critic 
-    2. ```ARCHITECTURE``` critic 
-    3. ```SECURITY``` critic
 
-2. Currently it ```only supports python``` codebases but will adding support for  more languages in future updates.
+1. **How this Agentic reviewer works:** It converts the whole repository into a directed graph. Nodes are named using their `fqn` to grab the correct context later. It detects newly added or modified nodes (classes, methods, and functions at any nesting level). It grabs the full definition of the changed entity by analyzing the `git diff`. Using the graph, it fetches all nodes connected via `calls` and `called_by` edges. Finally, domain-expert agents scrutinize the code. By default, we have three experts set up:
+    * `LOGIC` critic
+    * `ARCHITECTURE` critic
+    * `SECURITY` critic
+
+
+2. Currently, it `only supports python` codebases. Support for more languages will be added in future updates.
 
 # Quickstart
-1. **Clone** the repo locallaly
-2. **Delete** ```evaluations/```, ```logs/```, ```reports/```, ```.gitignore``` you dont need them they are leftovers of my trail runs.
-3. **Graph visualization** NOTE: currently only works for python codebases.
-    ```python
-    if __name__ == "__main__":
-        from codebase_map import launch_gui
-        from pathlib import Path
-        
-        project_path = r'../document_align'
-        project_path = r'../huggingface_transformer_clone/transformers/src/transformers/generation'
-        project_path = r'../buggy_fintech_portfolio_manager'
-        absolute_path = Path(project_path).absolute().resolve()
 
-        launch_gui(absolute_path)
+1. **Clone** the repo locally.
+2. **Delete** `evaluations/`, `logs/`, `reports/`, and `.gitignore`. You do not need them as they are leftovers from my trial runs.
+3. **Graph visualization** NOTE: Currently only works for Python codebases.
+    ```python
+    from codebase_map import launch_gui
+    from pathlib import Path
+
+    project_path = r'../document_align'
+    project_path = r'../huggingface_transformer_clone/transformers/src/transformers/generation'
+    project_path = r'../buggy_fintech_portfolio_manager'
+    absolute_path = Path(project_path).absolute().resolve()
+
+    launch_gui(absolute_path)
+
     ```
     ![Repo Graph Visualization Image](media_assets/repo_graph.png)
-4. **Code Review** 
+
+
+4. **Code Review**
     ```python
     from pathlib import Path
 
@@ -61,98 +68,128 @@
     project_path = r'../buggy_fintech_portfolio_manager'
 
     absolute_path = Path(project_path).resolve()
-    
+
     client = GeminiClient()
     # client = OpenAIClient()
     # client = GroqClient()
     # client = MistralClient()
     # client = CerebrasClient()
     # client = OpenRouterClient()
-    
+
     agent = default_code_review_agent(client=client)
-    
+
     final_state = run_code_review(
         agent=agent,
         absolute_project_path=project_path,
         report_dir=REPORTS_DIR_PATH / f"{client.__class__.__name__}_reports",
         require_linter=False
     )
+
     ```
 
-# Introduntion to developers
-1. **How this Agentic reviewer works:**
-    * **Context Grabing:** 
-        * **Code Context:** Well, to find an issue, it is not enough to check, analyze only the changed function block. That function is being called many places, and that function also uses another functions. The issue can arrive in any of these levels. There is no hard limit how deep up and how deep down we should go in this call graph. But for our convenience here and to minimize the context, we are only going to analyze the first child and first parent of the changed function.
-        * **Codebase Context:** For simple hobby projects and portfolio projects, only using code context may be enough. But for slightly larger and complex code bases, we almost certainly need a bird's eye view of the code base, like what actually this code base is trying to solve, what is the file structure, and what each file and package is responsible for. So it is advised that a proper context of code base that user wants to review should be placed in that directory. If it is present, this reviewer, this agentic reviewer will grab it automatically. If it is not, it will just print a warning in the terminal.
-        * **Linter Context:** You are seeing your agentic code reviewer is doing the job of a linter. So, and wasting your tokens and compute. In that case, we will provide the linter report in the context and instruct the agent that it must not point out this linter findings as it is already been discovered. This works perfectly, but it increases the prompt tokens massively. So use it wisely. It is advised that before reviewing your code base, first run a linter client on your code base and fix all of that that a linter is complaining.
-    * **Agent Workflow:** 
-        * **Agent Creation:** All the agents, as may be required by the use case. For example, security logic architecture can be created, and all of these agents will get the above context and then produce a structured output. This output, then further processed by an arbitrator agent. Arbitrator agent does not use any language model for its processing. It is purely logic-based. It filters the issues by using their confidence and creates a beautiful Markdown report from the findings of individual critics. It uses Langgraph.
-        ```mermaid
-        flowchart TD
-            A[Context] --> B[Expert1]
-            A --> C[Expert2]
-            A --> D[Expert3]
-            A --> E[Expert4]
-            B --> F[Arbitrator]
-            C --> F
-            D --> F
-            E --> F
-            F --> G[Markdown Report]
 
-    * **Observation:** For every single run, the complete prompt and the response is duly noted in the log files. These log files are named same as their critic name. We can always go and check it if anything goes wrong. Number of tokens consumed and the model used is also stored, so the user can monitor them very easily. [Example Log File](logs/logic_critic.log)
-    * **Features:** 
-        * **Graphical Visualization of the Codebase:** graph of our code base that we built to grab the proper context. We can also use that to visualize the code base in the browser using streamlit.
-        * **Custom Agents:** We can employ as many experts as we need. To create those experts or agents, we need to supply the system prompt, how they should behave, and name, what is the name of this particular critic and the client with a particular model selected.
-        * **Available Clients:** The following clients are available for use:
-            * OpenAI
-            * Gemini
-            * Groq
-            * Mistral
-            * Cerebras
-            * OpenRouter
-        * **Supported Models:** Ypu can use any model that a particular client is providing, but I have also made a model registry that you can see by this method. See the ```ClientInterface``` for more features.
-            ```python
-            from agentic_code_reviewer.clients import (
-                    ClientInterface,
-                    OpenAIClient,
-                    GeminiClient,
-                    GroqClient,
-                    MistralClient,
-                    CerebrasClient,
-                    OpenRouterClient
-                )
-            ClientInterface.show_all_models()
-            # OR
-            GeminiClient.show_models()
 
-            client = GeminiClient()
-            #OR
-            client = GeminiClient(model_name="gemini-3.5-flash")
+# Introduction to developers
+
+* **How this Agentic reviewer works:**
+    * **Context Grabbing:**
+        * **Code Context:** To find an issue, analyzing only the changed function block is not enough. That function is called in many places and uses other functions itself. Issues can arise at any level. While there is no hard limit on traversal depth, we only analyze the first child and first parent of the changed function to minimize context size.
+        * **Codebase Context:** Code context is enough for simple hobby projects. However, larger complex codebases require a bird's-eye view. This includes understanding the project's goal, file structure, and package responsibilities. A proper codebase context file should be placed in the target directory. The agentic reviewer will grab it automatically if present, or print a warning if missing.
+        * **Linter Context:** Your agentic code reviewer might perform simple linter tasks, wasting tokens and compute. To prevent this, provide a linter report in the context. The agent is instructed to ignore already discovered linter findings. This works perfectly but massively increases prompt tokens, so use it wisely. It is highly advised to run a linter and fix basic complaints before using this reviewer.
+
+
+    * **Agent Workflow:**
+        * **Agent Creation:** We can create as many agents as required (e.g., security, logic, architecture). These agents receive the context above and produce structured outputs. An arbitrator agent then processes these outputs. The arbitrator is purely logic-based and does not use a language model. It filters issues by confidence and creates a beautiful Markdown report from the findings. It utilizes Langgraph.
+
+
+            ```mermaid
+            flowchart TD
+                A[Context] --> B[Expert1]
+                A --> C[Expert2]
+                A --> D[Expert3]
+                A --> E[Expert4]
+                B --> F[Arbitrator]
+                C --> F
+                D --> F
+                E --> F
+                F --> G[Markdown Report]
+
             ```
-        
+
+
+* **Observation:** The complete prompt and response for every run are saved in log files named after the respective critic. You can check these if anything goes wrong. Token consumption and the selected model are also logged for easy monitoring. [Example Log File](logs/logic_critic.log)
+* **Features:**
+    * **Graphical Visualization of the Codebase:** We built a codebase graph to grab proper context. You can visualize this graph in the browser using Streamlit.
+    * **Custom Agents:** Employ as many experts as needed. To create an agent, supply its system prompt, expected behavior, critic name, and the client with a specific model selected.
+    * **Available Clients:** The following clients are available for use:
+        * OpenAI
+        * Gemini
+        * Groq
+        * Mistral
+        * Cerebras
+        * OpenRouter
+
+
+    * **Supported Models:** You can use any model provided by a particular client. I have also made a model registry that you can view using this method. See the `ClientInterface` for more features.
+
+        ```python
+        from agentic_code_reviewer.clients import (
+                ClientInterface,
+                OpenAIClient,
+                GeminiClient,
+                GroqClient,
+                MistralClient,
+                CerebrasClient,
+                OpenRouterClient
+            )
+        ClientInterface.show_all_models()
+        # OR
+        GeminiClient.show_models()
+
+        client = GeminiClient()
+        #OR
+        client = GeminiClient(model_name="gemini-3.5-flash")
+
+        ```
+
+
+
+
+
+
+
 # Full Guide
+
 1. **Installation**
-    * **Clone** the repo locallaly
-    * **Delete** ```evaluations/```, ```logs/```, ```reports/```, ```.gitignore``` you dont need them they are leftovers of my trail runs.
-    * **Install** the dependencies using pip
+    * **Clone** the repo locally.
+    * **Delete** `evaluations/`, `logs/`, `reports/`, and `.gitignore`. You do not need them as they are leftovers from my trial runs.
+    * **Install** the dependencies using pip.
+
         ```bash
         pip install -r requirements.txt
         ```
-2. **Graph visualization** NOTE: currently only works for python codebases.
-    If there are too many nodes in the graph, it may take a while to load the graph in the browser. It is advised to use a smaller codebase for this feature. A hard limit of 2000 nodes is set for this feature. If the codebase has more than 2000 nodes, it will not be visualized in the browser. It will just print a warning in the terminal.
+
+
+
+
+2. **Graph visualization** NOTE: Currently only works for Python codebases.
+If the graph has too many nodes, it may take a while to load in the browser. We advise using a smaller codebase for this feature. A hard limit of 2000 nodes is applied. If the codebase exceeds 2000 nodes, it will not be visualized, and a warning will print in the terminal instead.
+
     ```python
     from codebase_map import launch_gui
     from pathlib import Path
-    
+
     project_path = r'../document_align'
     project_path = r'../huggingface_transformer_clone/transformers/src/transformers/generation'
     project_path = r'../buggy_fintech_portfolio_manager'
     absolute_path = Path(project_path).absolute().resolve()
 
     launch_gui(absolute_path)
+
     ```
-    ![Repo Graph Visualization Image](media_assets/repo_graph.png)
-3. **Code Review** 
+
+
+3. **Code Review**
     ```python
     from pathlib import Path
 
@@ -175,23 +212,28 @@
     project_path = r'../buggy_fintech_portfolio_manager'
 
     absolute_path = Path(project_path).resolve()
-    
+
     client = GeminiClient()
     # client = OpenAIClient()
     # client = GroqClient()
     # client = MistralClient()
     # client = CerebrasClient()
     # client = OpenRouterClient()
-    
+
     agent = default_code_review_agent(client=client)
-    
+
     final_state = run_code_review(
         agent=agent,
         absolute_project_path=project_path,
         report_dir=REPORTS_DIR_PATH / f"{client.__class__.__name__}_reports",
         require_linter=False
     )
-4. **Make Custom Agents:** We can employ as many experts as we need. To create those experts or agents, we need to supply the system prompt, how they should behave, and name, what is the name of this particular critic and the client with a particular model selected.
+
+    ```
+
+
+4. **Make Custom Agents:** Employ as many experts as needed. To create an agent, supply its system prompt, expected behavior, critic name, and the client with a specific model selected.
+
     ```python
     from agentic_code_reviewer import (
         OpenAIClient,
@@ -236,14 +278,32 @@
                         (expert3_name, expert3_category, expert3_sys_prompt),
                         (expert4_name, expert4_category, expert4_sys_prompt)]
     ]
+
     ```
 
-# Evaluations
-For evaluation, I have tried two methods. First, I tried that. First, I tried that I will evaluate any large GitHub repository which is in Python and also open source GitHub Python library which is used extensively and maintained regularly. So I tried to run evaluations on Hugging Face Transformers repository. I have designed all the tools to extract the ground truth. Like ground truth, I am extracting from comments of contributor and maintainer, commit comments, and their specific code selection that they are commenting on. And by that, I thought this will serve as ground truth for the evaluation. But turns out those comments are not very descriptive. Most of the time it is like done, and any short form. But the main problem with this repository was that the maintainer and the contributor didn't claim any logical, straightforward issues in the code base that can be, like most of the time. It is very rarely in the GitHub repository of that standard and that scale that any real bug and issue security risk is exposed like that. Most of the time they are just minor architectural improvements and adding support to new model or framework like this. Agent code reviewer at this stage cannot identify those issues that human collaborator and maintainer can, because much of the issues that they are trying to solve is the compatibility with other services. So in the current code base there is no ground truth or context of those external services. That's why this GitHub approach did not and provide fruitful result. So I decided to make an extensive [Dummy Fintech Portfolio Manager Repository](https://github.com/RHMTshaikh/buggy_fintech_portfolio_manager.git) and intentionally add bugs in it and watch if the agent reviewer can catch. I built a fintech portfolio manager and intentionally left many kinds of and many levels of and various difficulty levels of issues. The complete repository, this dummy repository, is also published on GitHub. You can see it here, and you can also find the issues that I have introduced in it. I have made eight branches of this dummy repository, and in each branches I have introduced three to five issues. Not only issues, I have also introduced non-critical changes so that I can test my model on false positive cases.
 
-Evaluation Results: The evaluation results are stored in the ```evaluations/``` directory.   
+
+# Evaluations
+
+### First Approach: Open-Source Repository (Failed)
+
+Initially, I attempted to evaluate the agent using large, actively maintained open-source Python repositories. I ran evaluations on the Hugging Face Transformers repository. I extracted ground truth data from contributor comments, maintainer commits, and specific code selections.
+
+This approach ultimately failed. Commit comments were often not descriptive (e.g., just saying "done"). Furthermore, real, straightforward logical bugs are rarely exposed in repositories of this scale. Most issues involved minor architectural improvements or adding support for new models and frameworks. The agentic reviewer could not identify these issues because they often relied on compatibility with external services missing from the codebase context.
+
+### Second Approach: Dummy Fintech Repository (Success)
+
+Because the open-source approach lacked clear ground truth, I created an extensive [Dummy Fintech Portfolio Manager Repository(click to view)](https://github.com/RHMTshaikh/buggy_fintech_portfolio_manager.git). I intentionally introduced various bugs of different difficulty levels.
+
+This dummy repository is publicly available on GitHub, complete with documentation of the injected issues. I created eight separate branches for this repository. In each branch, I introduced three to five issues. I also included non-critical, benign changes to test the model on false positive cases.
+
+---
+
+**Evaluation Results:** The evaluation results are stored in the `evaluations/` directory.
+
 See --> [Evaluation Results](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/branch_accounting-ledger-update.log)  
-See --> [Evaluation Scores](evaluations/evaluation_scores.json)  
+See --> [Evaluation Scores](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/evaluation_scores.json)  
+See --> [Evaluation Scores](logs/architecture_critic.log#L396400)  
 
 **Structure of Evaluation Data**
 
@@ -278,28 +338,34 @@ class EvaluatorResponse(BaseModel):
     missed_ground_truths_ids: list[int] = Field(description="List of issue IDs of the ground truth issues that the agent failed to identify.")
     reasoning: str = Field(description="Step-by-step logical breakdown of the comparison before scoring.")
     score: EvaluationScores = Field(description="The overall evaluation scores.")
+
 ```
 
 ## Scores
+
 * **Review Agent:** openai/gpt-oss-120b
-* **Ground Truth Repository:** [Dummy Fintech Portfolio Manager](https://github.com/example/dummy-fintech-portfolio-manager)
+* **Ground Truth Repository:** [Dummy Fintech Portfolio Manager](https://github.com/RHMTshaikh/buggy_fintech_portfolio_manager.git)
 * **Evaluation Agent:** Gemini-3.5-flash-lite
 * **Scores for all branches**
-    * **recall**: [2, 0, 3, 0, 0, 4, 2, 2, 1]
-    * **root_cause**: [2, 0, 2, 0, 0, 3, 2, 2, 2]
-    * **false_positive_penalty**: [ -2, -1, 0, 0, -1, 0, -1, -1, -2]
-    * **hallucination_penalty**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    * **actionability**: [2, 1, 2, 0, 1, 2, 2, 2, 2]
-    * **discovery_bonus**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-* **Average Scores**
-    | parameter | value | range |
-    |-----------|-------|-------------|
-    |**recall**| 1.56 | 0 - 4 |
-    |**root_cause**| 1.44 | 0 - 3 |
-    |**false_positive_penalty**| -0.89 | -3 - 0  |
-    |**hallucination_penalty**| 0.0 | -2 - 0|
-    |**actionability**| 1.56 |  0 - 2 |
-    |**discovery_bonus**| 0.0 |  0 - 2|
-    |**Overall Score**| 7.37 | -5 - 11 |
+* **recall**: [2, 0, 3, 0, 0, 4, 2, 2, 1]
+* **root_cause**: [2, 0, 2, 0, 0, 3, 2, 2, 2]
+* **false_positive_penalty**: [ -2, -1, 0, 0, -1, 0, -1, -1, -2]
+* **hallucination_penalty**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+* **actionability**: [2, 1, 2, 0, 1, 2, 2, 2, 2]
+* **discovery_bonus**: [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-    **Which amounts to 77% of the maximum possible score.**
+
+* **Average Scores**
+| parameter | value | range |
+| --- | --- | --- |
+| **recall** | 1.56 | 0 - 4 |
+| **root_cause** | 1.44 | 0 - 3 |
+| **false_positive_penalty** | -0.89 | -3 - 0 |
+| **hallucination_penalty** | 0.0 | -2 - 0 |
+| **actionability** | 1.56 | 0 - 2 |
+| **discovery_bonus** | 0.0 | 0 - 2 |
+| **Overall Score** | 7.37 | -5 - 11 |
+
+
+**Which amounts to 77% of the maximum possible score.**
+> It would score much higher if I had not hit rate limit errors. I used free-tier models that ran fine when the context was under 8k tokens. This caused the 0 scores in several branches. I will implement a fallback mechanism in future updates. This will use a smaller model when the context is under 8k tokens and a larger model for contexts over 8k tokens, significantly improving the overall score.

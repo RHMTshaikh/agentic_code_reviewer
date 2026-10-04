@@ -23,14 +23,14 @@ if __name__ == "__main__":
 
     absolute_path = Path(project_path).resolve()
     
-    client = GeminiClient()
+    client = GeminiClient("gemini-flash-lite-latest")
     # client = OpenAIClient()
     # client = GroqClient()
     # client = MistralClient()
     # client = CerebrasClient()
     # client = OpenRouterClient()
     
-    agent = default_code_review_agent(client=client)
+    agent, system_prompts = default_code_review_agent(client=client)
     
     final_state = run_code_review(
         agent=agent,

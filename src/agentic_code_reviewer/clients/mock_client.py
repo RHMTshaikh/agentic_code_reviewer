@@ -13,7 +13,8 @@ class MockLLMClient(ClientInterface):
         self, 
         system_prompt: str, 
         user_prompt: str, 
-        schema: Type[BaseModel]
+        schema: Type[BaseModel],
+        print_trace: bool = False
     ) -> ClientStructuredResponse:
         # Simulate ~120ms network & inference round-trip
         time.sleep(0.12)

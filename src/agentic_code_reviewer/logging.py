@@ -1,10 +1,16 @@
-
 from pathlib import Path
 
 from agentic_code_reviewer.schemas.state import CriticResponse, ReviewNodeAuditEntry
 
 
-def log(time_stamp: str, system_prompt: str, user_prompt: str, response: CriticResponse, audit_trail: ReviewNodeAuditEntry, file_name: str = "unknown"):
+def log(
+        time_stamp: str, 
+        system_prompt: str, 
+        user_prompt: str, 
+        response: CriticResponse, 
+        audit_trail: ReviewNodeAuditEntry, 
+        log_path: Path
+    ) -> int:
     """
     Logs the system prompt, user prompt, response, and tokens used to a file in the logs directory.
     Each log entry is appended to the file named {file_name}.txt in the logs directory.
@@ -13,12 +19,11 @@ def log(time_stamp: str, system_prompt: str, user_prompt: str, response: CriticR
         system_prompt (str): The system prompt sent to the LLM.
         user_prompt (str): The user prompt sent to the LLM.
         response (CriticResponse): The response received from the LLM.
-        audit_trail (NodeAuditEntry): The audit trail containing token usage information.
-        file_name (str): The name of the log file (without extension).
+        audit_trail (ReviewNodeAuditEntry): The audit trail containing token usage information.
+        log_path (Path): The path to the log file.
+    Returns:
+        The line number of the log entry in the log file.
     """
-    log_dir = Path.cwd() / "logs" 
-    log_dir.mkdir(parents=True, exist_ok=True)
-    file_path = log_dir / f"{file_name}.log"
 
     log_entry = (
         f"\n{'='*50}\n"
@@ -28,6 +33,11 @@ def log(time_stamp: str, system_prompt: str, user_prompt: str, response: CriticR
         f"User Prompt: {user_prompt}\n"
         f"Response: {response.model_dump_json(indent=2)}\n"
     )
+    line_number = 0
 
-    with open(file_path, "a", encoding="utf-8") as f:
+    with open(log_path, "a+", encoding="utf-8") as f:
+        f.seek(0)
+        line_number = sum(1 for _ in f)
         f.write(log_entry)
+
+    return line_number + 3
