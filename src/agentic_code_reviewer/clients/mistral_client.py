@@ -29,12 +29,14 @@ class MistralClient(ClientInterface):
             system_prompt: str,
             user_prompt: str,
             schema: Type[BaseModel],
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
 
             response = self.openai_like_api(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 schema=schema,
+                print_trace=print_trace
             )
             return response
 
@@ -61,8 +63,5 @@ if __name__ == "__main__":
         model_config = {"extra": "forbid"}
         summary: str
         
-    try:
-        response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
-        print(response.response.summary)
-    except Exception as e:
-        pass
+    response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
+    print(response)

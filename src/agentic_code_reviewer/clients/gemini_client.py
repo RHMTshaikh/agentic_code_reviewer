@@ -10,7 +10,7 @@ from agentic_code_reviewer.environment_manager import get_or_prompt_api_key
 class GeminiClient(ClientInterface):
     """Production client for interacting with Gemini via Structured Outputs."""
     
-    def __init__(self, model_name: str = "gemini-3.6-flash"):
+    def __init__(self, model_name: str = "gemini-3.7-flash"):
         get_or_prompt_api_key(self.__class__.__name__)  
 
         api_key = os.getenv(self.__class__.__name__)
@@ -20,17 +20,18 @@ class GeminiClient(ClientInterface):
         self.model_name = model_name
         self.client = genai.Client(api_key=api_key)
 
-    def invoke_structured(
-        self, 
-        system_prompt: str, 
-        user_prompt: str, 
-        schema: Type[BaseModel]
+    def invoke_structured(self, 
+            system_prompt: str, 
+            user_prompt: str, 
+            schema: Type[BaseModel],
+            print_trace: bool = False
         ) -> ClientStructuredResponse:
         
         response = self.google_like_api(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema=schema,
+            print_trace=print_trace
         )
         return response
     
@@ -80,15 +81,24 @@ class GeminiClient(ClientInterface):
         
 if __name__ == "__main__":
     # Example usage
-    client = GeminiClient()
+    client = GeminiClient("gemini-3.8-flash")
+    
+    modles = client.show_models()
+    
+    
     system_prompt = "You are a helpful assistant."
     user_prompt = "Please summarize the following text: 'Cerebras Systems is a company that builds AI hardware and software.'"
     
     class SummarySchema(BaseModel):
         model_config = {"extra": "forbid"}
         summary: str
-    try:
+
+    for model in modles:
+        client.model_name = model
+        print(f"✅ MODEL {model}. ","="*50)
         response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
-        print(response.response.summary)
-    except Exception as e:
-        pass
+        print(response)
+
+    # response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
+    # print(response)
+    

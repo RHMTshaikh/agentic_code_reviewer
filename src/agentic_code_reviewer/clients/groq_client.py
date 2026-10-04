@@ -26,25 +26,27 @@ class GroqClient(ClientInterface):
         system_prompt: str,
         user_prompt: str,
         schema: Type[BaseModel],
+        print_trace: bool = False
     ) -> ClientStructuredResponse:
 
         response = self.openai_like_api(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema=schema,
+            print_trace=print_trace
         )
         return response
 
 if __name__ == "__main__":
     client = GroqClient(model_name="openai/gpt-oss-120b")
+    models = client.list_available_models()
+    for model in models:
+        client.add_model(model)
     system_prompt = "You are a helpful assistant."
     user_prompt = "Please summarize the following text: 'Cerebras Systems is a company that builds AI hardware and software.'"
     
     class SummarySchema(BaseModel):
         model_config = {"extra": "forbid"}
         summary: str
-    try:
-        response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
-        print(response.response.summary)
-    except Exception as e:
-        raise e
+    response = client.invoke_structured(system_prompt, user_prompt, SummarySchema)
+    print(response)

@@ -25,7 +25,12 @@ from codebase_map.git_utils import get_staged_fqns
 ClientInterface._populate_models_registry()  # Load free models when the class is first defined
 
 
-def make_input_state(project_path: Path, senior_custom_instructions = "", require_linter: bool = False) -> AgentState:
+def make_input_state(
+        project_path: Path, 
+        report_dir: Path,
+        senior_custom_instructions, 
+        require_linter: bool
+    ) -> AgentState:
     """
     Placeholder for future implementation to fetch real diffs and SCIP context from a live repo.
     """
@@ -33,9 +38,10 @@ def make_input_state(project_path: Path, senior_custom_instructions = "", requir
         print(f"⚠️ The directory '{project_path}' is not a Git repository. Please initialize a Git repository or provide a valid path.")
         return
     
+    
     NODES, root_node = make_graph_using_ast(project_path)
 
-    staged_fqns = get_staged_fqns(project_path)
+    staged_fqns, curr_branch  = get_staged_fqns(project_path)
     
     # find all the nodes that get affected by the staged ids
     affected_fqns: set[str] = set()
@@ -91,11 +97,13 @@ def make_input_state(project_path: Path, senior_custom_instructions = "", requir
         
     input_state: AgentState = {
         "time_stamp": datetime.now().strftime("%d-%m-%Y_%H-%M-%S"),
+        "report_dir": report_dir,
         "modified_code": modified_code,
         "affected_code": affected_code,
         "linter_annotations": linter_instructions + linter_anotations,
         "repository_context": repository_context,
         "senior_custom_instructions": senior_custom_instructions,
+        "current_branch": curr_branch,
         
         "raw_findings": [],
         "node_audit_trail": [],
@@ -144,7 +152,12 @@ def run_code_review(
         require_linter: bool = False
     """
     absolute_path = Path(absolute_project_path).resolve()
-    input_state = make_input_state(absolute_path, senior_custom_instructions=senior_custom_instructions, require_linter=require_linter)
+    input_state = make_input_state(
+        absolute_path, 
+        senior_custom_instructions=senior_custom_instructions, 
+        require_linter=require_linter,
+        report_dir=report_dir
+    )
     
     final_state = agent.invoke(input_state)
     

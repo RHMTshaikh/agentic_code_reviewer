@@ -6,31 +6,31 @@ from pydantic import BaseModel
 
 from agentic_code_reviewer.paths import EVALUATION_SCORES_FILE_PATH
 
-def clean_evaluation_scores_file():
+def clean_evaluation_scores_file(eval_scores_file_path: Path = EVALUATION_SCORES_FILE_PATH):
     """
     Clear all previous evaluation scores
     """
-    if EVALUATION_SCORES_FILE_PATH.exists():
-        with open(EVALUATION_SCORES_FILE_PATH, "w", encoding="utf-8") as f:
+    if eval_scores_file_path.exists():
+        with open(eval_scores_file_path, "w", encoding="utf-8") as f:
             f.write('{}') 
     else:
         # If the file doesn't exist, create it and write an empty JSON object
-        EVALUATION_SCORES_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
-        with open(EVALUATION_SCORES_FILE_PATH, "w", encoding="utf-8") as f:
+        eval_scores_file_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+        with open(eval_scores_file_path, "w", encoding="utf-8") as f:
             f.write('{}')
         
         
-def update_scores(scores: dict[str, float]):
+def update_scores(scores: dict[str, float], eval_scores_file_path: Path = EVALUATION_SCORES_FILE_PATH):
     """
     Append new evaluation scores to the existing scores in the JSON file.
     """
-    if not EVALUATION_SCORES_FILE_PATH.exists():
+    if not eval_scores_file_path.exists():
         # If the file doesn't exist, create it and write the initial scores
-        with open(EVALUATION_SCORES_FILE_PATH, "w", encoding="utf-8") as f:
+        with open(eval_scores_file_path, "w", encoding="utf-8") as f:
             json.dump(scores, f, indent=2)
     else:
         # If the file exists, read the existing scores and append the new ones
-        with open(EVALUATION_SCORES_FILE_PATH, "r", encoding="utf-8") as f:
+        with open(eval_scores_file_path, "r", encoding="utf-8") as f:
             prev_scores = json.load(f)
         
         for key, value in scores.items():
@@ -38,7 +38,7 @@ def update_scores(scores: dict[str, float]):
                 prev_scores[key] = []
             prev_scores[key].append(scores[key])
 
-        with open(EVALUATION_SCORES_FILE_PATH, "w", encoding="utf-8") as f:
+        with open(eval_scores_file_path, "w", encoding="utf-8") as f:
             json.dump(prev_scores, f, indent=2)
             
 

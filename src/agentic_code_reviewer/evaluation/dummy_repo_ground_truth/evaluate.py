@@ -20,21 +20,20 @@ from agentic_code_reviewer.schemas.state import EvaluatorResponse
 
 if __name__ == "__main__":
     local_repo_path = Path(r'../buggy_fintech_portfolio_manager').absolute().resolve()
-    gemini_models = GeminiClient().show_models()
-    gemini_model = gemini_models[7]
-    print(f"Using Gemini model: {gemini_model}")
     # review_client = OpenAIClient()
     # review_client = GeminiClient(model_name=gemini_model)
-    review_client = GroqClient(model_name="openai/gpt-oss-120b")
+    # review_client = GroqClient(model_name="openai/gpt-oss-120b")
+    review_client = CohereClient("command-a-reasoning-08-2025")
     # review_client = MistralClient()
     # review_client = OpenRouterClient()
     # review_client = CerebrasClient()
     
     # eval_client = OpenAIClient()
-    eval_client = GeminiClient(model_name=gemini_model)
+    # eval_client = GeminiClient("gemini-3.6-flash")
     # eval_client = GroqClient()
     # eval_client = MistralClient()
-    # eval_client = OpenRouterClient()
+    # eval_client = CohereClient()
+    eval_client = OpenRouterClient("qwen/qwen3.8-27b:free")
     # eval_client = CerebrasClient()
     
     if not review_client.ping():
@@ -46,13 +45,20 @@ if __name__ == "__main__":
     agent, system_prompts = default_code_review_agent(review_client)
 
     output_dir = Path("outputs")
+    eval_log_dir=EVALUATIONS_DIR_PATH / f"{eval_client.model_name.split('/')[-1].replace(':', '-')}" / f"name_{local_repo_path.name}"
+    eval_log_dir.mkdir(parents=True, exist_ok=True)
+    eval_scores_path = eval_log_dir / "evaluation_scores.json"
     
-    clean_evaluation_scores_file()
+    
+    clean_evaluation_scores_file(eval_scores_file_path=eval_scores_path)
     
     repo_evaluator = RepoEvaluator(local_repo_path)
     
     # 3. Iteratively checkout each branch
     for branch in repo_evaluator.branches():
+        if branch == "main":
+            continue  # Skip the main branch
+        
         print(f"\n\n=== Evaluating branch: {branch} ===\n\n")
         try:
             repo_evaluator.setup_for_branch(branch)
@@ -78,14 +84,14 @@ if __name__ == "__main__":
                 critic_output=critic_output,
                 ground_truth=ground_truth,
                 client=eval_client,
-                eval_log_path=EVALUATIONS_DIR_PATH / f"{eval_client.model_name.split('/')[-1].replace(':', '-')}" / f"name_{local_repo_path.name}" / f"branch_{branch}.log",
+                eval_log_path=eval_log_dir / f"branch_{branch}.log",
                 error_log_path=EVALUATIONS_DIR_PATH / "errors" / f"{eval_client.model_name.split('/')[-1].replace(':', '-')}" / f"name_{local_repo_path.name}" / f"branch_{branch}.log",
                 schema=EvaluatorResponse,
                 branch_name=branch
             )
             
             if scores is not None:
-                update_scores(scores.model_dump())
+                update_scores(scores.model_dump(), eval_scores_file_path=eval_scores_path)
                 
         except subprocess.CalledProcessError as e:
             print(f"Failed to setup for branch {branch}. Error:\n{e.stderr}")

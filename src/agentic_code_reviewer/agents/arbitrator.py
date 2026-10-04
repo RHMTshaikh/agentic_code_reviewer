@@ -2,6 +2,7 @@ from agentic_code_reviewer.logging import log
 import time
 from typing import Dict, Any, List
 from agentic_code_reviewer.schemas.state import AgentState, CriticResponse, CriticResponse, ErrorResponse, ReviewNodeAuditEntry, ReviewFinding
+from agentic_code_reviewer.paths import LOGS_DIR_PATH
 
 def arbitrator_node(state: AgentState) -> Dict[str, Any]:
     start_time = time.perf_counter()
@@ -57,11 +58,16 @@ def arbitrator_node(state: AgentState) -> Dict[str, Any]:
     lines = [
         f"# TIMESTAMP: {state.get('time_stamp')}",
         f"## Senior Engineer Code Review Report",
+        f"  **Current Branch:** {state.get('current_branch')}",
         "### Executive Summary",
         f"- **Total Raw Findings:** {len(raw_findings)}",
         f"- **Actionable Findings (Validated):** {len(validated)}",
         f"- **Hallucinations / Noise Filtered:** {len(dropped)}\n"
     ]
+    
+    lines.append("### Detailed Logs\n")
+    for log_entry in state.get("logs", []):
+        lines.append(f"- {log_entry}\n")
 
     if custom_instruction:
         lines.append(f"> **Senior Directive Applied:** *\"{custom_instruction}\"*\n")
@@ -110,7 +116,7 @@ def arbitrator_node(state: AgentState) -> Dict[str, Any]:
         user_prompt=f"",
         response= CriticResponse(findings=validated),
         audit_trail=audit,
-        file_name="arbitrator"
+        log_path=LOGS_DIR_PATH / "arbitrator.log"
     )
 
     return {

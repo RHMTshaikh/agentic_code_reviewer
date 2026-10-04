@@ -15,3 +15,5 @@ EVALUATIONS_DIR_PATH = CWD / "evaluations"
 EVALUATION_SCORES_FILE_PATH = EVALUATIONS_DIR_PATH / "evaluation_scores.json"
 
 REPORTS_DIR_PATH = CWD / "reports"
+
+LOGS_DIR_PATH = CWD / "logs"

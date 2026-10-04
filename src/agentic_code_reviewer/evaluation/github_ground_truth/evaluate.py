@@ -111,7 +111,8 @@ if __name__ == "__main__":
     #     import json
     #     ground_truth_dict = json.load(f)
     
-    clean_evaluation_scores_file()
+    eval_scores_path = Path.cwd() / "evaluation_scores.json"
+    clean_evaluation_scores_file(eval_scores_path)
 
     for sha, commit_info in list(ground_truth_dict["commits"].items())[3:]:
         
@@ -159,5 +160,5 @@ if __name__ == "__main__":
         )
         
         if scores is not None:
-            update_scores(scores.model_dump())  
+            update_scores(scores.model_dump(), eval_scores_file_path=eval_scores_path)  
         
