@@ -1,12 +1,16 @@
 # Results for Interviewer  
-* **Reports**  
-Generated repots by the agentic code reviewer are stored in the `reports/` directory. You can view them in your browser. The reports are organized by client. [Example Report](reports/CohereClient_reports/review_report.md)
-* **Logs**  
-The complete prompt and response for every run are saved in log files named after the respective critic. You can check these if anything goes wrong. Token consumption and the selected model are also logged for easy monitoring. [Example Log File](logs/architecture_critic.log)
-* **Evaluations**
-The evaluation results are stored in the `evaluations/` directory. You can view them to assess the performance of the agentic code reviewer. [Example Evaluation](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/branch_auth-and-crypto-hardening.log), [Scores](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/evaluation_scores.json)
+* **Reports:**   [Example Report](reports/CohereClient_reports/review_report.md)
 
+    Generated repots by the agentic code reviewer are stored in the `reports/` directory. You can view them in your browser. The reports are organized by client. 
+* **Logs:**   [Example Log File](logs/architecture_critic.log)
+
+    The complete prompt and response for every run are saved in log files named after the respective critic. You can check these if anything goes wrong. Token consumption and the selected model are also logged for easy monitoring. 
+* **Evaluations:** [Example Evaluation](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/branch_auth-and-crypto-hardening.log),   [Scores](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/evaluation_scores.json)
+
+
+    The evaluation results are stored in the `evaluations/` directory. You can view them to assess the performance of the agentic code reviewer. 
 # CONTENT
+
 
  - [Quick Introduction](#quick-introduction)
  - [I can boast about](#i-can-boast-about)
@@ -21,9 +25,13 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
 * Get a code review before pushing changes to production. Save valuable senior engineer time by catching rookie mistakes early.
 * View a graphical visualization of your repository.
 
+* Get a code review before pushing changes to production. Save valuable senior engineer time by catching rookie mistakes early.
+* View a graphical visualization of your repository.
+
 # I can boast about
 
 * I have built the fastest codebase graph builder for Python codebases using `ast`. It can build a 1000-node graph in under 5 seconds.
+
 
 # Introduction to users
 
@@ -33,14 +41,27 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
     * `SECURITY` critic
 
 
+
+
+
 2. Currently, it `only supports python` codebases. Support for more languages will be added in future updates.
+
 
 # Quickstart
 
 1. **Clone** the repo locally.
 2. **Delete** `evaluations/`, `logs/`, `reports/`, and `.gitignore`. You do not need them as they are leftovers from my trial runs.
 3. **Graph visualization** NOTE: Currently only works for Python codebases.
+
+
     ```python
+    from codebase_map import launch_gui
+    from pathlib import Path
+
+    project_path = r'../document_align'
+    project_path = r'../huggingface_transformer_clone/transformers/src/transformers/generation'
+    project_path = r'../buggy_fintech_portfolio_manager'
+    absolute_path = Path(project_path).absolute().resolve()
     from codebase_map import launch_gui
     from pathlib import Path
 
@@ -51,11 +72,17 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
 
     launch_gui(absolute_path)
 
+    launch_gui(absolute_path)
+
     ```
     ![Repo Graph Visualization Image](media_assets/repo_graph.png)
 
 
+
+
+
 4. **Code Review**
+
     ```python
     from pathlib import Path
 
@@ -77,6 +104,7 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
 
     absolute_path = Path(project_path).resolve()
 
+
     client = GeminiClient()
     # client = OpenAIClient()
     # client = GroqClient()
@@ -84,7 +112,9 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
     # client = CerebrasClient()
     # client = OpenRouterClient()
 
+
     agent = default_code_review_agent(client=client)
+
 
     final_state = run_code_review(
         agent=agent,
@@ -93,7 +123,11 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
         require_linter=False
     )
 
+
     ```
+
+
+
 
 
 
@@ -153,6 +187,37 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
         ClientInterface.show_all_models()
         # OR
         GeminiClient.show_models()
+            ```
+
+
+* **Observation:** The complete prompt and response for every run are saved in log files named after the respective critic. You can check these if anything goes wrong. Token consumption and the selected model are also logged for easy monitoring. [Example Log File](logs/logic_critic.log)
+* **Features:**
+    * **Graphical Visualization of the Codebase:** We built a codebase graph to grab proper context. You can visualize this graph in the browser using Streamlit.
+    * **Custom Agents:** Employ as many experts as needed. To create an agent, supply its system prompt, expected behavior, critic name, and the client with a specific model selected.
+    * **Available Clients:** The following clients are available for use:
+        * OpenAI
+        * Gemini
+        * Groq
+        * Mistral
+        * Cerebras
+        * OpenRouter
+
+
+    * **Supported Models:** You can use any model provided by a particular client. I have also made a model registry that you can view using this method. See the `ClientInterface` for more features.
+
+        ```python
+        from agentic_code_reviewer.clients import (
+                ClientInterface,
+                OpenAIClient,
+                GeminiClient,
+                GroqClient,
+                MistralClient,
+                CerebrasClient,
+                OpenRouterClient
+            )
+        ClientInterface.show_all_models()
+        # OR
+        GeminiClient.show_models()
 
         client = GeminiClient()
         #OR
@@ -162,11 +227,8 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
 
 
 
-
-
-
-
 # Full Guide
+
 
 1. **Installation**
     * **Clone** the repo locally.
@@ -177,9 +239,6 @@ The evaluation results are stored in the `evaluations/` directory. You can view 
         pip install -r requirements.txt
         ```
 
-
-
-
 2. **Graph visualization** NOTE: Currently only works for Python codebases.
 If the graph has too many nodes, it may take a while to load in the browser. We advise using a smaller codebase for this feature. A hard limit of 2000 nodes is applied. If the codebase exceeds 2000 nodes, it will not be visualized, and a warning will print in the terminal instead.
 
@@ -187,12 +246,14 @@ If the graph has too many nodes, it may take a while to load in the browser. We 
     from codebase_map import launch_gui
     from pathlib import Path
 
+
     project_path = r'../document_align'
     project_path = r'../huggingface_transformer_clone/transformers/src/transformers/generation'
     project_path = r'../buggy_fintech_portfolio_manager'
     absolute_path = Path(project_path).absolute().resolve()
 
     launch_gui(absolute_path)
+
 
     ```
 
@@ -221,6 +282,7 @@ If the graph has too many nodes, it may take a while to load in the browser. We 
 
     absolute_path = Path(project_path).resolve()
 
+
     client = GeminiClient()
     # client = OpenAIClient()
     # client = GroqClient()
@@ -228,7 +290,9 @@ If the graph has too many nodes, it may take a while to load in the browser. We 
     # client = CerebrasClient()
     # client = OpenRouterClient()
 
+
     agent = default_code_review_agent(client=client)
+
 
     final_state = run_code_review(
         agent=agent,
@@ -286,9 +350,16 @@ If the graph has too many nodes, it may take a while to load in the browser. We 
                         (expert3_name, expert3_category, expert3_sys_prompt),
                         (expert4_name, expert4_category, expert4_sys_prompt)]
     ]
-
+    
+    agent = create_code_review_agent(agent_factories=agent_factories)
+    
+    final_state = run_code_review(
+        agent=agent,
+        absolute_project_path=project_path,
+        report_dir=REPORTS_DIR_PATH / f"{client.__class__.__name__}_reports",
+        require_linter=False
+    )
     ```
-
 
 
 # Evaluations
@@ -310,8 +381,8 @@ This dummy repository is publicly available on GitHub, complete with documentati
 **Evaluation Results:** The evaluation results are stored in the `evaluations/` directory.
 
 See --> [Evaluation Results](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/branch_accounting-ledger-update.log)  
+See --> [Evaluation Logs](logs/architecture_critic.log#L396400)  
 See --> [Evaluation Scores](evaluations/gemini-3.5-flash-lite/name_buggy_fintech_portfolio_manager/evaluation_scores.json)  
-See --> [Evaluation Scores](logs/architecture_critic.log#L396400)  
 
 **Structure of Evaluation Data**
 
@@ -347,14 +418,16 @@ class EvaluatorResponse(BaseModel):
     reasoning: str = Field(description="Step-by-step logical breakdown of the comparison before scoring.")
     score: EvaluationScores = Field(description="The overall evaluation scores.")
 
+
 ```
 
 ## Scores
 
+
 * **Review Agent:** openai/gpt-oss-120b
 * **Ground Truth Repository:** [Dummy Fintech Portfolio Manager](https://github.com/RHMTshaikh/buggy_fintech_portfolio_manager.git)
 * **Evaluation Agent:** Gemini-3.5-flash-lite
-    * **Scores for all branches**
+* **Scores for all branches**
     * **recall**: [2, 0, 3, 0, 0, 4, 2, 2, 1]
     * **root_cause**: [2, 0, 2, 0, 0, 3, 2, 2, 2]
     * **false_positive_penalty**: [ -2, -1, 0, 0, -1, 0, -1, -1, -2]
@@ -364,16 +437,15 @@ class EvaluatorResponse(BaseModel):
 
 
 * **Average Scores**
-
-| parameter | value | range |
-| --- | --- | --- |
-| **recall** | 1.56 | 0 - 4 |
-| **root_cause** | 1.44 | 0 - 3 |
-| **false_positive_penalty** | -0.89 | -3 - 0 |
-| **hallucination_penalty** | 0.0 | -2 - 0 |
-| **actionability** | 1.56 | 0 - 2 |
-| **discovery_bonus** | 0.0 | 0 - 2 |
-| **Overall Score** | 7.37 | -5 - 11 |
+    | parameter | value | range |
+    | --- | --- | --- |
+    | **recall** | 1.56 | 0 - 4 |
+    | **root_cause** | 1.44 | 0 - 3 |
+    | **false_positive_penalty** | -0.89 | -3 - 0 |
+    | **hallucination_penalty** | 0.0 | -2 - 0 |
+    | **actionability** | 1.56 | 0 - 2 |
+    | **discovery_bonus** | 0.0 | 0 - 2 |
+    | **Overall Score** | 7.37 | -5 - 11 |
 
 
 **Which amounts to 77% of the maximum possible score.**
